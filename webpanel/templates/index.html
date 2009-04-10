@@ -1,0 +1,9 @@
+$def with (session, form)
+$var user:$session.user
+
+<form method="POST" action="/" id="loginform">
+    <h1>Entrada</h1>
+    $if form:
+        $:form.render()
+</form>
+

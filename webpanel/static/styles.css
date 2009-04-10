@@ -1,0 +1,153 @@
+/* style for webpypanel */
+
+body {
+    font-family: 'Trebuchet MS', Verdana, Arial, Helvetica, sans-serif;
+    font-size: 1.1em;
+}
+
+/* for debug */
+/*
+div,h1,h2,h3{
+border: 0.1em solid #FFaa00;
+}*/
+
+h1,h2,h3 {
+    margin-left: 10px;
+}
+
+.clear {
+  clear:both;
+}
+
+#container {
+    width:70%;
+    background-color:#AACCDD;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+.center {
+    margin-left:auto;
+    margin-right:auto;
+}
+
+#ContentArea {
+    margin-left:auto;
+    margin-right:auto;
+    height: 400px;
+    overflow: auto;
+}
+
+#ContentArea img{
+border:none;
+display:block;
+margin: auto auto;
+}
+
+
+#error {
+    background-color:#d21212;
+    color: #FFF;
+    display: block;
+    text-align:center;
+    width:60%;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+#menu {
+/*    background-color:#1b5d91;*/
+ margin:0 auto 0 auto; width:390px;
+/*
+    display: block;
+    text-align:center;
+    margin-left:auto;
+    margin-right:auto;
+    width:54%;*/
+    /*height: 40px;*/
+}
+
+/*
+#menu ul { list-style: none; padding: 0; margin: 0;}
+#menu li {float: left; margin: 0 0.15em;}
+#menu li a {
+background: #fff bottom left repeat-x;
+height: 2em;
+line-height: 2em;
+float: left;
+width: 8em;
+display: block;
+border: 0.1em solid #dcdce9;
+color: #0d2474;
+text-decoration: none;
+text-align: center;
+font-size: 0.8em;
+}
+*/
+
+/* Hide from IE5-Mac \*/
+/*#menu li a { float: none }*/
+/* End hide */ 
+
+
+#loginform table {width:70%; margin-left:15%; margin-right:15%; margin-top:50px; padding-bottom: 200px;}
+
+#data {
+    width:90%;
+    background-color:#CCDDCC;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+#footer {
+    font-size: 0.8em;
+    margin-top:100px;
+    text-align: center;
+}
+
+#phones {
+width:80%; margin-left:15%; margin-right:15%;
+border: 0.1em solid #dcdce9;
+border-collapse: collapse;
+font-size: 0.8em;
+}
+#phones td,tr {
+border: 0.1em solid #dcdce9;
+spacing
+}
+.ttitle {
+font-weight: bold;
+}
+
+#filesform {width:70%; margin-left:15%; margin-right:15%;}
+
+
+#controls {
+    text-align:right;
+    margin-right:15px;
+}
+#controls img {
+    border:0;
+}
+#controls spam {
+    font-size: 0.7em;
+}
+
+#actions {
+text-align:center;
+font-size: 0.9em;
+}
+
+#config {width:70%; margin-left:15%; margin-right:15%;}
+
+#imgdata {
+    background-color:#fff;
+    text-align:center;
+    width:50%;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+#imgdata img {
+border: 0.3em dotted #dcdce9;
+}

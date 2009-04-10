@@ -1,0 +1,34 @@
+$def with (session, data)
+$var user:$session.user
+
+
+<h1 class="clear">Configuración</h1>
+
+
+<form method="post" action="/config">
+<table id="config" border=1>
+$for v in data:
+    <tr>
+        <td>$v.varname: (itype=$v.itype )</td>
+        <td>
+            $if v.itype == "checkbox":
+                <input type="checkbox" name="$v.varname" id="$v.varname" value=1 $v.varnamechecked >
+            $elif v.itype == "text":
+                <input type="text" name="$v.varname" id="$v.varname" value="$v.value" >
+            $elif v.itype == "multiselect":
+                <select name="$v.varname" id="$v.varname" multiple size=7>
+                    $for o in v.values:
+                        <option name="$o.name">$o.value</option>
+                </select>
+                <a href="#" onclick="javascript:addtoselect('$v.varname', '$v.varname_disabled')">==&gt;</a>
+                <a href="#" onclick="javascript:addtoselect('$v.varname_disabled', '$v.varname')">&lt;==</a>
+                <select name="$v.varname" id="$v.varname" multiple size=7>
+                    $for o in v.values:
+                        <option name="$o.name">$o.value</option>
+                </select>
+        </td>
+    </tr>
+
+</table>
+</form>
+

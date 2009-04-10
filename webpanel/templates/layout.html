@@ -1,0 +1,46 @@
+$def with (page)
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="es" lang="es">
+<head>
+  <title>ThinFilter</title>
+  <link rel="stylesheet" href="/data/styles.css" type="text/css" media="screen" charset="utf-8"/>
+  <script type="text/javascript" src="/data/jquery.js"></script>
+  <script type="text/javascript" src="/data/thinfilter.js"></script>
+  <link href="/data/dropdown.css" media="all" rel="stylesheet" type="text/css" />
+  <link href="/data/ultimate.css" media="all" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="container">
+
+$if page.user != 'anonymous':
+    <div id="menu">
+    <ul id="nav" class="dropdown dropdown-horizontal">
+    <li><a href='/'>Inicio</a></li>
+    <li><span class="dir">Configuración</span>
+        <ul>
+            <li><a href="/config/cache">Cache</a></li>
+            <li><a href="/config/network">Red</a></li>
+            <li><span class="dir">Filtro</span>
+                <ul>
+                    <li><a href="/filter/downloads">Descargas</a></li>
+                    <li><a href="/filter/phrases">Palabras</a></li>
+                    <li><a href="/filter/sites">Sitios</a></li>
+                </ul>
+            </li>
+        </ul>
+    </li>
+    <li><a href='/phones'>Accesos</a></li>
+    <li><a href='/logout'>Salir</a></li>
+    </ul>
+    </div>
+
+    $:page
+
+    <div id="footer"><a href="http://thinetic.es">Thinetic Systems SLNE</a></div>
+</div>
+</body>
+</html>
+
+
+
+

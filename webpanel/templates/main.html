@@ -1,0 +1,22 @@
+$def with (session, form)
+$var user:$session.user
+
+<script type="text/javascript">
+function hide() {
+$$("div#data:visible").slideUp("slow");
+}
+
+function onload(){
+$$("div#data:hidden").slideDown("slow");
+}
+
+$$(document).ready(function() {
+   onload();
+ });
+
+</script>
+<h1 class="clear">Interfaz de administración</h1>
+
+<div id="data" class="data" style="display:none;">
+Esta es la interfaz de administración de ThinBlue. Desde aquí puede configurar el servicio así como tener estadísticas en tiempo real de los envíos y accesos.
+</div>
