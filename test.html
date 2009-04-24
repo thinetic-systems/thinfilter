@@ -2,7 +2,7 @@
 <html>
     <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>ERROR: No se puede conectar a esa direcci&oacute;n</title>
+    <title>ERROR: No se puede conectar a esa dirección</title>
     <style type="text/css" media="screen">
 /* <![CDATA[ */
 BODY{
@@ -22,42 +22,41 @@ PRE{
     </head>
 <body>
     <div class="windowed">
+
     <center>
         <h2>:: La siguiente direcci&oacute;n no est&aacute; permitida ::</h2>
     </center>
     </div>
-
     <hr noshade size="1px">
-
     <div class="windowed">
-        <p>URL: -URL-</p>
-        <p>Se encontraron los siguientes errores:</p>
+        <p>URL: http://www.google.com/search?ie=UTF-8&oe=UTF-8&q=sex</p>
 
+        <p>Se encontraron los siguientes errores:</p>
         <ul>
         <li>
             <strong>Acceso denegado. Esta web no est&aacute; permitida.</strong>
-            <p>Contacte con el administrador si cree que deber&iacute;a permitirse entrar.</p>
+            <p>Contacte con el administrador si cree que deber&iacute;a permitirse entrar..</p>
         </li>
+
         </ul>
     </div>
-
     <hr noshade size="1px">
     
     <div class="windowed">
     <p>Informaci&oacute;n extra:</p>
     <ul>
-        <li><b>Tu direcci&oacute;n IP: -IP-</b></li>
-        <li><b>Intentando conectar a: <a href="-URL-">-URL-</a></b></li>
-        <li id="vars" style="display:none;">
-            L&iacute;mite configurado: <b><span id="limit"></span></b>
-            Encontrado: <b><span id="found"></span></b>
-            [<a href="javascript:verCausa();">ver causa</a>]
-        </li>
-        <li id="lireasons" style="display:none;"><b>Razones del bloqueo:</b> <span id="reason">-REASONLOGGED-</span></li>
+        <li><b>Tu direcci&oacute;n IP: 192.168.2.2</b></li>
+
+        <li><b>Intentando conectar a: <a href="http://www.google.com/search?ie=UTF-8&oe=UTF-8&q=sex">http://www.google.com/search?ie=UTF-8&oe=UTF-8&q=sex</a></b></li>
+        <li id="vars" style="display:none;">Límite configurado: <span id="limit"></span> Encontrado: <span id="found"></span> [<a href="javascript:verCausa();">ver causa</a>]</li>
+        <li id="lireasons" style="display:none;"><b>Razones del bloqueo:</b> <span id="reason">Límite de ponderación de frases de 50 : 1130 ((-news, report)+(-foto, satelite)+( porn, xxx)+( xxx,  porn)+(amateur,  
+porn)+(amateur,  tits)+(amateur,  xxx)+(naked,  xxx )+(pornstar, pics)+(pornstar, pictures)+(teen,  porn)+(webcam,  girl)+(webcam,  porn)+(webcam,  xxx )+(chicas, 
+sexo)+(videos, gratis)+ amateurs + boob+ nude+ porn+ xxx +amateur+-amor+big tits+boobs+free porn+free xxx+hottest+hottest pornstar+naked+-noticia+porno+ramas+sexy+xxx 
+latina+xxx porn)</span></li>
     </ul>
     </div>
+<center><small><a href="http://thinetic.es">Thinetic Systems</a></small></center>
 
-<center><small>[ThinFilter] by <a href="http://thinetic.es">Thinetic Systems</a></small></center>
 <script type="text/javascript">
 var reason;
 var limit="";
@@ -97,22 +96,12 @@ document.onload=getlimit();
 </script>
 </body>
 </html>
-
-
 <!--
-The available variables are as follows:
-- URL- gives the URL the user was trying to get to.
-- REASONGIVEN- gives the nice reason (i.e. not quoting the banned phrase).
-- REASONLOGGED- gives the reason that gets logged including full details.
-- USER- gives the username if known.
-- IP- gives the originating IP.
-
+The available variables are as follows:- URL- gives the URL the user was trying to get to.- REASONGIVEN- gives the nice reason (i.e. not quoting the banned phrase).- 
+REASONLOGGED- gives the reason that gets logged including full details.- USER- gives the username if known.- IP- gives the originating IP.
 You need to remove the space between the - and the variable to use them
 in your html.  They are there above so extra processing is not required.
-
 More example templates are likely to be found on the DansGuardian web site
 on the Extras page.
-
-Daniel Barron 2002-03-27
---!>
+Daniel Barron 2002-03-27--!>
 

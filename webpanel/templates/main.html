@@ -1,8 +1,5 @@
-$def with (session, form)
-$var user:$session.user
-
 <script type="text/javascript">
-function hide() {
+<!--function hide() {
 $$("div#data:visible").slideUp("slow");
 }
 
@@ -13,10 +10,21 @@ $$("div#data:hidden").slideDown("slow");
 $$(document).ready(function() {
    onload();
  });
-
+-->
 </script>
 <h1 class="clear">Interfaz de administración</h1>
 
-<div id="data" class="data" style="display:none;">
-Esta es la interfaz de administración de ThinBlue. Desde aquí puede configurar el servicio así como tener estadísticas en tiempo real de los envíos y accesos.
+<div id="data" class="data">
+    <img class="netimg margin20" src="/data/etc3300.png" title="ThinFilter">
+    Este es la interfaz de administración de ThinFilter.
+    Desde aquí puede configurar la red y el filtro así como obtener estadísticas de acceso.
 </div>
+
+<div id="qbuttons" class="clear">
+    
+    <a class="qbutton" href=""><img src="/data/wizard.png" alt="Asistente"><br/>Asistente</a>
+    <a class="qbutton" href="/network"><img src="/data/network.png" alt="Red"><br/>Configuración de Red</a>
+    <a class="qbutton" href="/stats/Daily/"><img src="/data/stats.png" alt="Estadísticas"><br/>Estadísticas</a>
+</div>
+
+<br class="clear">

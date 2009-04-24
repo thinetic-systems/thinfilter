@@ -1,0 +1,48 @@
+$def with (data, action='Guardar')
+
+
+
+<h1 class="clear">Configuración de OpenVPN</h1>
+
+
+<form method="post" action="/vpn">
+<table id="settings">
+$for v in data:
+    <tr>
+        <td>
+        $if v == "CA_EXPIRE":
+            Expiración certificado raíz
+        $elif v == "KEY_EXPIRE":
+            Expiración de los certificados
+        $elif v == "KEY_PROVINCE":
+            Provincia
+        $elif v == "KEY_CITY":
+            Ciudad
+        $elif v == "KEY_COUNTRY":
+            País
+        $elif v == "KEY_ORG":
+            Organización, o nombre de empresa
+        $elif v == "KEY_EMAIL":
+            Correo electrónico
+        $elif v == "KEY_SIZE":
+            Tamaño del certificado
+        </td>
+        <td>
+            <input class="$(v)" type="text" name="$(v)" id="$(v)" value="$(data[v])">
+        $if "EXPIRE" in v:
+            <small>(3650 = 10años)</small>
+        $elif v == "KEY_SIZE":
+            <small>(1024 por defecto)</small>
+        $elif v == "KEY_PROVINCE" or v == "KEY_COUNTRY":
+            <small>(2 letras)</small>
+        </td>
+    </tr>
+    
+    
+    <tr><td colspan="3"><hr></td></tr>
+
+
+<tr><td colspan="2">&nbsp;</td><td><input type="submit" id="$action" value="$action"></td></tr>
+</table>
+</form>
+

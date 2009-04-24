@@ -40,18 +40,24 @@ BASE="/usr/share/thinfilter/webpanel/"
 SESSIONS_DIR="/var/lib/thinfilter/sessions"
 
 if os.path.isdir("/.dirs/dev/thinfilter"):
-    DAEMON_LOG_FILE = "/.dirs/dev/thinblue/thinfilter.log"
-    DAEMON_PID_FILE = "/.dirs/dev/thinblue/thinfilter.pid"
-    DBNAME = "/.dirs/dev/thinblue/thinfilter.db"
+    DAEMON_LOG_FILE = "/.dirs/dev/thinfilter/thinfilter.log"
+    DAEMON_PID_FILE = "/.dirs/dev/thinfilter/thinfilter.pid"
+    DBNAME = "/.dirs/dev/thinfilter/thinfilter.db"
 
 
 # set BASE in git sources dir to debug
-if os.path.abspath(os.curdir) == "/home/mario/thinetic/dansguardian":
-    BASE="/home/mario/thinetic/dansguardian/webpanel/"
-    DAEMON_LOG_FILE = "/home/mario/thinetic/dansguardian/thinfilter.log"
-    DAEMON_PID_FILE = "/home/mario/thinetic/dansguardian/thinfilter.pid"
-    DBNAME = "/home/mario/thinetic/dansguardian/thinfilter.db"
-    SESSIONS_DIR="/home/mario/thinetic/dansguardian/webpanel/sessions"
+if os.path.abspath(os.curdir) == "/home/mario/thinetic/git/thinfilter":
+    BASE="/home/mario/thinetic/git/thinfilter/webpanel/"
+    DAEMON_LOG_FILE = "/home/mario/thinetic/git/thinfilter/thinfilter.log"
+    DAEMON_PID_FILE = "/home/mario/thinetic/git/thinfilter/thinfilter.pid"
+    DBNAME = "/home/mario/thinetic/git/thinfilter/thinfilter.db"
+    SESSIONS_DIR="/home/mario/thinetic/git/thinfilter/webpanel/sessions"
+elif os.path.abspath(os.curdir) == "/mnt/thinetic/git/thinfilter":
+    BASE="/mnt/thinetic/git/thinfilter/webpanel/"
+    DAEMON_LOG_FILE = "/mnt/thinetic/git/thinfilter/thinfilter.log"
+    DAEMON_PID_FILE = "/mnt/thinetic/git/thinfilter/thinfilter.pid"
+    DBNAME = "/mnt/thinetic/git/thinfilter/thinfilter.db"
+    SESSIONS_DIR="/mnt/thinetic/git/thinfilter/webpanel/sessions"
 
 
 
@@ -62,5 +68,6 @@ stop = False
 
 
 thread_verbose = False
+urls=[]
 
 #print "D: thinblue.config loaded"

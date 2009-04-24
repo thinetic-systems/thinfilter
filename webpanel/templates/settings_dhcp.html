@@ -1,0 +1,37 @@
+$def with (data, action='Guardar')
+
+
+
+<h1 class="clear">Configuración de DHCP</h1>
+
+
+<form method="post" action="/network/dhcp">
+<table id="settings">
+$for v in data:
+    <tr>
+        <td>
+        $if v == "dhcp-range":
+            <img src="/data/dhcp.png" title="Configuración del servicio DHCP">
+            <br/>
+            <small>Rango DHCP</small>
+        $elif v == "dns":
+            <img src="/data/dns.png" title="Configuración de los DNS">
+            <br/>
+            <small>Direcciones DNS</small>
+        </td>
+        <td><input type="text" name="$(v)" id="$(v)" value="$(data[v])">
+        $if v == "dhcp-range":
+            <br/><small>ejemplo [10.0.0.2,10.0.0.254,12h]</small>
+        $elif v == "dns":
+            <br/><small>ejemplo [208.67.222.222,208.67.220.220]</small>
+        </td>
+    </tr>
+    
+    
+    <tr><td colspan="3"><hr></td></tr>
+
+
+<tr><td colspan="2">&nbsp;</td><td><input type="submit" id="$action" value="$action"></td></tr>
+</table>
+</form>
+

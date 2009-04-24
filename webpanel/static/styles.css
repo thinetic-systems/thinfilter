@@ -11,7 +11,7 @@ div,h1,h2,h3{
 border: 0.1em solid #FFaa00;
 }*/
 
-h1,h2,h3 {
+h1,h2,h3, h4 {
     margin-left: 10px;
 }
 
@@ -29,6 +29,13 @@ h1,h2,h3 {
 .center {
     margin-left:auto;
     margin-right:auto;
+}
+
+.center-text {
+    margin-left:auto;
+    margin-right:auto;
+    text-align:center;
+    padding:10px;
 }
 
 #ContentArea {
@@ -57,7 +64,7 @@ margin: auto auto;
 
 #menu {
 /*    background-color:#1b5d91;*/
- margin:0 auto 0 auto; width:390px;
+ margin:0 auto 0 auto; width:450px;
 /*
     display: block;
     text-align:center;
@@ -67,34 +74,12 @@ margin: auto auto;
     /*height: 40px;*/
 }
 
-/*
-#menu ul { list-style: none; padding: 0; margin: 0;}
-#menu li {float: left; margin: 0 0.15em;}
-#menu li a {
-background: #fff bottom left repeat-x;
-height: 2em;
-line-height: 2em;
-float: left;
-width: 8em;
-display: block;
-border: 0.1em solid #dcdce9;
-color: #0d2474;
-text-decoration: none;
-text-align: center;
-font-size: 0.8em;
-}
-*/
-
-/* Hide from IE5-Mac \*/
-/*#menu li a { float: none }*/
-/* End hide */ 
-
 
 #loginform table {width:70%; margin-left:15%; margin-right:15%; margin-top:50px; padding-bottom: 200px;}
 
 #data {
     width:90%;
-    background-color:#CCDDCC;
+    /*background-color:#CCDDCC;*/
     margin-left:auto;
     margin-right:auto;
 }
@@ -102,6 +87,12 @@ font-size: 0.8em;
 #footer {
     font-size: 0.8em;
     margin-top:100px;
+    text-align: center;
+}
+
+#sarg {
+    font-size: 0.8em;
+    margin-top: 10px;
     text-align: center;
 }
 
@@ -138,7 +129,7 @@ text-align:center;
 font-size: 0.9em;
 }
 
-#config {width:70%; margin-left:15%; margin-right:15%;}
+#config, #settings {width:70%; margin-left:15%; margin-right:15%;}
 
 #imgdata {
     background-color:#fff;
@@ -149,5 +140,68 @@ font-size: 0.9em;
 }
 
 #imgdata img {
-border: 0.3em dotted #dcdce9;
+    border: 0.3em dotted #dcdce9;
 }
+
+input, textarea, button, hr {
+    border: 1px solid #dcdce9;
+}
+
+input {
+    padding: 2px;
+}
+
+.netimg{
+    float:left;
+}
+
+.margin20{
+    margin-left:20px;
+    margin-right:20px;
+}
+
+.margindhcp{
+    margin-left:40px;
+}
+.margindhcp img{
+    margin-bottom: 70px;
+}
+
+#qbuttons{
+    width:70%;
+    margin-top:100px;
+    margin-left:auto;
+    margin-right:auto;
+}
+.qbutton {
+    display:block;
+    float:left;
+    border: 2px solid #dcdce9;
+    width:100px;
+    height:90px;
+    padding-top:20px;
+    margin-right:20px;
+    margin-left:20px;
+    font-size:0.7em;
+    text-align: center;
+    text-decoration: none;
+}
+.qbutton img{
+    border:0;
+}
+
+.qbutton:hover {
+    background-color:#FFaa00;
+}
+
+#menu2 {
+    margin:0 auto 0 auto; width:280px;
+}
+#menu2 ul.dropdown {
+ z-index: 100;
+}
+
+.middle{
+    vertical-align:middle;
+}
+

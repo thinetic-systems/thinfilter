@@ -1,0 +1,67 @@
+$def with (data, action='Guardar')
+
+<script type="text/javascript">
+function dhcp_trigger(iface, status){
+  $$("input."+iface).each(function() {
+        this.disabled = status;
+    });
+}
+$$(document).ready(function() {
+   if(! $$("#internet")[0]) return;
+   var internet=$$("#internet")[0].value;
+   dhcp_trigger(internet, true);
+ });
+</script>
+
+<h1 class="clear">Configuración de red</h1>
+
+
+<form method="post" action="/network">
+<table id="settings">
+$for v in data:
+    <tr>
+        <td rowspan="5">
+        $if (v['gateway']) != None:
+            <img class="netimg" src="/data/internet.png" title="Conexión a internet">
+        $else:
+            <img class="netimg" src="/data/local.png" title="Conexión a red local">
+        $if (v['link']) == True:
+            <img class="netimg" src="/data/link.png" title="Cable conectado">
+        $else:
+            <img class="netimg" src="/data/no-link.png" title="Cable no conectado">
+        <br class="clear"/>Interfaz de red: $(v['iface'])
+        </td>
+    </tr>
+    <tr>
+        $if (v['gateway']) != None:
+            <td>DHCP</td>
+            <td>
+                <input type="checkbox" onchange="javascript:dhcp_trigger('$(v['iface'])', this.checked);" name="$(v['iface'])_dhcp" id="$(v['iface'])_dhcp" value="1" checked>
+                <input type="hidden" name="internet" id="internet" value="$(v['iface'])" >
+            </td>
+        $else:
+            <td colspan="2"><small>Datos informativos, el interfaz interno no se puede editar.</small></td>
+    </tr>
+    <tr>
+        <td>Dirección IP:</td>
+        <td><input class="$(v['iface'])" type="text" name="$(v['iface'])_addr" id="$(v['iface'])_addr" value="$(v['addr'])" $(v['readonly'])></td>
+    </tr>
+    <tr>
+        <td>Máscara:</td>
+        <td><input class="$(v['iface'])" type="text" name="$(v['iface'])_netmask" id="$(v['iface'])_netmask" value="$(v['netmask'])" $(v['readonly'])></td>
+    </tr>
+    $if (v['gateway']) != None:
+        <tr>
+            <td>Puerta de enlace:</td>
+            <td><input class="$(v['iface'])" type="text" name="$(v['iface'])_gateway" id="$(v['iface'])_gateway" value="$(v['gateway'])"></td>
+        </tr>
+    $else:
+        <tr><td colspan="2"></td></tr>
+    
+    <tr><td colspan="3"><hr></td></tr>
+
+
+<tr><td colspan="2">&nbsp;</td><td><input type="submit" id="$action" value="$action"></td></tr>
+</table>
+</form>
+

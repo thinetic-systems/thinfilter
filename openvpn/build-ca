@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#
+# Build a root certificate
+#
+
+cd /etc/openvpn/
+. ./vars
+export EASY_RSA="${EASY_RSA:-.}"
+#"$EASY_RSA/pkitool" --interact --initca $*
+"$EASY_RSA/pkitool" --batch --initca $*

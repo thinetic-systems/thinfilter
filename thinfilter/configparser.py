@@ -24,12 +24,7 @@
 
 import os
 import sys
-# FIXME not needed if module is imported
-try:
-    import thinfilter.logger as lg
-except ImportError:
-    print "DEBUG: Import exception, adding cur dir to sys.path"
-    sys.path.append("/home/mario/thinetic/dansguardian")
+
 import thinfilter.logger as lg
 import thinfilter.config
 

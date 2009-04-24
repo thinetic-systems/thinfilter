@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Similar to build-key, but protect the private key
+# with a password.
+
+cd /etc/openvpn/
+. ./vars
+
+echo "KEY_EMAIL=$KEY_EMAIL"
+if [ "FORCE_KEY_EMAIL" != "" ]; then
+  export KEY_EMAIL=$FORCE_KEY_EMAIL
+fi
+
+export EASY_RSA="${EASY_RSA:-.}"
+"$EASY_RSA/pkitool" --batch --pass $*
+

@@ -83,4 +83,4 @@ def is_stoping(dosql=False):
         return False
 
 
-__all__=['logger', 'config', 'db', 'daemonize', 'rules', 'configparser']
+__all__=['logger', 'config', 'db', 'daemonize', 'rules', 'configparser', 'common', 'static']

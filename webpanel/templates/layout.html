@@ -1,8 +1,8 @@
-$def with (page)
+$def with (body='', title='ThinFilter', session=None)
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="es" lang="es">
 <head>
-  <title>ThinFilter</title>
+  <title>$title</title>
   <link rel="stylesheet" href="/data/styles.css" type="text/css" media="screen" charset="utf-8"/>
   <script type="text/javascript" src="/data/jquery.js"></script>
   <script type="text/javascript" src="/data/thinfilter.js"></script>
@@ -12,14 +12,29 @@ $def with (page)
 <body>
 <div id="container">
 
-$if page.user != 'anonymous':
+$if session and session.user:
     <div id="menu">
     <ul id="nav" class="dropdown dropdown-horizontal">
     <li><a href='/'>Inicio</a></li>
-    <li><span class="dir">Configuración</span>
+    <li><span class="dir">Red</span>
         <ul>
-            <li><a href="/config/cache">Cache</a></li>
-            <li><a href="/config/network">Red</a></li>
+            <li><a href="/network">Configuración</a></li>
+            <li><a href="/network/dhcp">DHCP</a></li>
+            <li><a href="/network/stats">Estadísticas</a></li>
+        </ul>
+    </li>
+    <li><span class="dir">VPN</span>
+        <ul>
+            <li><a href="/vpn">Configuración</a></li>
+            <li><a href="/vpn/users">Usuarios</a></li>
+            <li><a href="/vpn/remote">Tunel</a></li>
+        </ul>
+    </li>
+    <li><span class="dir">Filtro</span>
+        <ul>
+            <li><a href="/settings/cache">Cache</a></li>
+            <li><a href="/settings/network">Red</a></li>
+            <li><a href="/settings/stats">Estadísticas</a></li>
             <li><span class="dir">Filtro</span>
                 <ul>
                     <li><a href="/filter/downloads">Descargas</a></li>
@@ -29,14 +44,14 @@ $if page.user != 'anonymous':
             </li>
         </ul>
     </li>
-    <li><a href='/phones'>Accesos</a></li>
+    <li><a href="/stats/Daily/">Accesos</a></li>
     <li><a href='/logout'>Salir</a></li>
     </ul>
     </div>
 
-    $:page
+$:body
 
-    <div id="footer"><a href="http://thinetic.es">Thinetic Systems SLNE</a></div>
+    <div id="footer">ThinFilter powered by [<a href="http://thinetic.es">Thinetic Systems SLNE</a>]</div>
 </div>
 </body>
 </html>

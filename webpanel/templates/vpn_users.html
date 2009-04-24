@@ -1,0 +1,26 @@
+$def with (data, action='Guardar')
+
+
+
+<h1 class="clear">Configuración de usuarios</h1>
+
+
+<form method="post" action="/vpn">
+<table id="settings" border="1">
+$for v in data:
+    <tr>
+        <td rowspan="$(len(data[v])+1)">Usuario: <b>$v</b></td>
+    </tr>
+    $for w in data[v]:
+        <tr>
+        <td>$w</td>
+    </tr>
+    
+    
+    <tr><td colspan="3"><hr></td></tr>
+
+
+<tr><td>&nbsp;</td><td><input type="submit" id="$action" value="$action"></td></tr>
+</table>
+</form>
+

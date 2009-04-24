@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Make a certificate/private key pair using a locally generated
+# root certificate.
+#
+# Explicitly set nsCertType to server using the "server"
+# extension in the openssl.cnf file.
+
+cd /etc/openvpn/
+. ./vars
+
+export EASY_RSA="${EASY_RSA:-.}"
+"$EASY_RSA/pkitool" --batch --server $*
+

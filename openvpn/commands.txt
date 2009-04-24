@@ -1,0 +1,50 @@
+  382  cp * /etc/openvpn/
+  383  cd /etc/openvpn/
+  384  ls
+  385  gunzip openssl-0.9.6.cnf.gz 
+  386  nano openssl-0.9.6.cnf 
+  387  nano openssl.cnf 
+  388  ls
+  389  nano vars 
+  390  cd /mnt/thinetic/
+  391  mv /etc/openvpn/ ./
+  392  ln -s /mnt/thinetic/openvpn/ /etc/
+  393  cd /etc/openvpn/
+  394  ls
+  395  cat vars 
+  396  . ./vars 
+  397  ./clean-all 
+  398  ./build-ca 
+  399  nano build-ca 
+  400  rgrep interact
+  401  rgrep interact *
+  402  ls
+  403  ./pkitool --help
+  404  ./pkitool -h
+  405  cat build-ca 
+  406  nano build-ca 
+  407  ./build-ca 
+  408  nano build-key-server 
+  409  ./build-key-server server
+  410  ls keys/
+  411  nano build-key
+  412  ./build-key cliente1
+  413  /etc/init.d/openvpn restart
+  414  tail -500  /var/log/syslog
+  415  ls
+  416  cd
+  417  rm /etc/openvpn
+  418  ln -s /mnt/thinetic/git/thinfilter/openvpn /etc/
+  419  cd /etc/openvpn
+  420  ls
+  421  /etc/init.d/openvpn restart
+  422  cat /var/log/openvpn.log 
+  423  /etc/init.d/openvpn restart
+  424  cat /var/log/openvpn.log 
+  425  openssl dhparam -out dh1024.pem 1024
+  426  /etc/init.d/openvpn restart
+  427  cat /var/log/openvpn.log 
+  428  ifconfig 
+  429  history |less
+  430  history |tail -50
+  431  history |tail -50 > commands.txt

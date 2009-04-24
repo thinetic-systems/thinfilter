@@ -63,12 +63,13 @@ ul.dropdown li {
 
 ul.dropdown li.hover,
 ul.dropdown li:hover {
- background: url(grad2.png) 0 100% repeat-x;
+ /*background: url(grad2.png) 0 100% repeat-x;*/
  color: #000;
 }
 
+
 ul.dropdown li a:active {
- background: url(grad1.png) repeat-x;
+ /*background: url(grad1.png) repeat-x;*/
 }
 
 

@@ -1,0 +1,38 @@
+$def with (data, extra)
+
+
+<h1 class="clear">Estadísticas de red</h1>
+
+<div class="center-text">
+Tiempo funcionando: <b>$(extra[0])</b>
+</div>
+<div class="center-text">
+Dirección IP pública: <b>$(extra[1])</b>
+</div>
+
+<table id="settings">
+$for v in data:
+    <tr>
+        <td rowspan="3">
+        $if v['gateway'] != None:
+            <img class="middle" src="/data/internet-tx-rx.png" title="Tráfico hacia internet">
+        $else:
+            <img class="middle" src="/data/local-tx-rx.png" title="Tráfico local">
+        Interfaz de red: $(v['iface'])
+        </td>
+    </tr>
+    <tr>
+        <td>Datos descargados:</td>
+        <td>$(v['rx'])<img class="middle" src="/data/down.png" title="Descargado"></td>
+    </tr>
+    
+    <tr>
+        <td>Datos enviados:</td>
+        <td>$(v['tx'])<img class="middle" src="/data/up.png" title="Enviado"></td>
+    </tr>
+    
+    
+    
+    <tr><td colspan="3"><hr></td></tr>
+</table>
+
