@@ -25,7 +25,8 @@
 ul.dropdown a,
 ul.dropdown span {
  display: block;
- padding: 7px 10px;
+ /*padding: 7px 10px;*/
+ padding: 0 10px;
 }
 
 
@@ -41,7 +42,9 @@ ul.dropdown li {
 
 ul.dropdown ul a,
 ul.dropdown ul span {
- padding: 8px;
+ /*padding: 8px;*/
+ padding: 1px;
+ padding-left: 5px;
 }
 
 

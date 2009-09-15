@@ -24,11 +24,17 @@
 
 # common functions
 
+import time
 
 import thinfilter.logger as lg
 import thinfilter.config
 
 import web
+triggers={
+        'netip-change':[],
+        'localip-change':[],
+        'dnsmasq-change':[]
+        }
 
 
 class SessionData(object):
@@ -64,7 +70,25 @@ def layout(body='', title='ThinFilter', session=None ):
 
     return new_deco
 
+################################################################################
+# from /usr/lib/python2.5/BaseHTTPServer.py
+def date_time_string(timestamp=None):
+    """Return the current date and time formatted for a message header."""
+    weekdayname = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
+    monthname = [None,
+                 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    if timestamp is None:
+        timestamp = time.time()
+    year, month, day, hh, mm, ss, wd, y, z = time.gmtime(timestamp)
+    s = "%s, %02d %3s %4d %02d:%02d:%02d GMT" % (
+            weekdayname[wd],
+            day, monthname[month], year,
+            hh, mm, ss)
+    return s
+
+################################################################################
 
 def init_modules(base):
     for mod in dir(base):
@@ -80,7 +104,7 @@ def init_modules(base):
             print dir(obj)
 
 
-
+################################################################################
 def register_url(url, classname):
     lg.debug("register_url() url='%s' classname='%s'"%(url, classname), __name__)
     thinfilter.config.urls.append( url )
@@ -92,8 +116,8 @@ def geturls():
         lg.debug("REGISTERED url '%s'  =>   '%s'"%(thinfilter.config.urls[i*2], thinfilter.config.urls[i*2+1]) )
     return tuple(thinfilter.config.urls)
 
-
-class Menu(dict):
+################################################################################
+class Base(dict):
     def __getattr__(self, key):
         try:
             return self[key]
@@ -110,8 +134,19 @@ class Menu(dict):
             raise AttributeError, k
 
     def __repr__(self):
-        return '<Menu ' + dict.__repr__(self) + '>'
+        return '<Base ' + dict.__repr__(self) + '>'
 
+################################################################################
 
 def register_menu(menu):
     lg.debug("register_menu() menu=%s"%menu, __name__)
+
+
+################################################################################
+
+
+def register_trigger(triggername, triggeraction):
+    lg.debug("register_trigger() name=%s action=%s"%(triggername,triggeraction) )
+    if not triggers.has_key(triggername):
+        triggers[triggername]=[]
+    triggers[triggername].append(triggeraction)

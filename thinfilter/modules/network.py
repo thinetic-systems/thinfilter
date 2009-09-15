@@ -30,6 +30,7 @@ import os
 import sys
 import netifaces
 import urllib
+import time
 
 
 import thinfilter.logger as lg
@@ -255,7 +256,7 @@ class netStats(object):
         f=open("/proc/net/dev", 'r')
         for line in f.readlines():
             if "%s:"%dev in line:
-                tx=int(line.split()[8]) or 0
+                tx=int(line.split()[9]) or 0
                 rx=line.split()[0].replace("%s:"%dev, "")
                 if rx == "":
                     rx=int(line.split()[1])
@@ -288,7 +289,7 @@ class extraStats(object):
 
     def __get_public_ip__(self):
         try:
-            raw = urllib.urlopen("http://dynupdate.no-ip.com/ip.php", proxies={})
+            raw = urllib.urlopen("http://thinetic.com/ip.php?id=thinfilter", proxies={})
             public_ip=raw.readline().strip()
             raw.close()
             return public_ip
@@ -299,14 +300,17 @@ class extraStats(object):
     def get(self):
         return [self.uptime, self.public_ip]
 
+
+
+
 class netstats(object):
     @thinfilter.common.islogged
     @thinfilter.common.layout(body='', title='Estadísticas de red')
     def GET(self, options=None):
         data=netStats().get()
         extra=extraStats().get()
-        lg.debug("netstats::GET() dnsmasq=%s" %data)
-        lg.debug("netstats::GET() extra=%s" %extra)
+        lg.debug("netstats::GET() dnsmasq=%s" %data, __name__)
+        lg.debug("netstats::GET() extra=%s" %extra, __name__)
         return render.net_stats(data, extra)
 
     @thinfilter.common.islogged
@@ -314,6 +318,25 @@ class netstats(object):
         return web.seeother('/network/stats')
 
 
+
+class netgraph(object):
+    #@thinfilter.common.islogged
+    def GET(self, sfile):
+        sfile=str(sfile)
+        from thinfilter.statcreator import Net, CPU
+        lg.debug("netgraph()::GET sfile=%s"%sfile, __name__)
+        if "eth" in sfile:
+            app=Net(iface=str(sfile.split('.')[0]))
+            app.graph()
+        elif "cpu" in sfile:
+            app=CPU()
+            app.graph()
+        else:
+            return web.notfound()
+        web.header("Expires", thinfilter.common.date_time_string(time.time()+60*5)) # expires in 5 minutes
+        web.header("Cache-Control", "max-age=300, must-revalidate") 
+        web.header('Content-Type', 'image/png')
+        return open(str(sfile) ).read()
 
 
 def init():
@@ -327,6 +350,7 @@ def init():
     thinfilter.common.register_url('/network',      'thinfilter.modules.network.network')
     thinfilter.common.register_url('/network/dhcp',  'thinfilter.modules.network.dhcp')
     thinfilter.common.register_url('/network/stats', 'thinfilter.modules.network.netstats')
+    thinfilter.common.register_url('/network/netgraph/([a-zA-Z0-9-.]*)', 'thinfilter.modules.network.netgraph')
 
 
 

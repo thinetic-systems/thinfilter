@@ -13,7 +13,7 @@ Dirección IP pública: <b>$(extra[1])</b>
 <table id="settings">
 $for v in data:
     <tr>
-        <td rowspan="3">
+        <td rowspan="4">
         $if v['gateway'] != None:
             <img class="middle" src="/data/internet-tx-rx.png" title="Tráfico hacia internet">
         $else:
@@ -21,18 +21,24 @@ $for v in data:
         Interfaz de red: $(v['iface'])
         </td>
     </tr>
+    
     <tr>
-        <td>Datos descargados:</td>
+        <td colspan="2"><img src="/network/netgraph/$(v['iface']).png"></td>
+    </tr>
+    
+    <tr>
+        <td>Total datos descargados:</td>
         <td>$(v['rx'])<img class="middle" src="/data/down.png" title="Descargado"></td>
     </tr>
     
     <tr>
-        <td>Datos enviados:</td>
+        <td>Total datos enviados:</td>
         <td>$(v['tx'])<img class="middle" src="/data/up.png" title="Enviado"></td>
     </tr>
-    
-    
     
     <tr><td colspan="3"><hr></td></tr>
 </table>
 
+<div class="center" style="text-align:center;">
+<img src="/network/netgraph/cpu.png">
+</div>

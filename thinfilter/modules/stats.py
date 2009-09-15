@@ -172,8 +172,10 @@ def init():
     lg.debug("stats::init()", __name__)
     """
         '/stats/(.+?)(?:(\.[^.]*$)|$)$', 'stats'
+        '/stats-images/(.+?)(?:(\.[^.]*$)|$)$', 'stats'
     """
     thinfilter.common.register_url('/stats/(.+?)(?:(\.[^.]*$)|$)$', 'thinfilter.modules.stats.stats')
+    thinfilter.common.register_url('/stats-images/(.+?)(?:(\.[^.]*$)|$)$', 'thinfilter.modules.stats.stats_images')
 
 
 

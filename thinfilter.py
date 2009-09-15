@@ -26,6 +26,7 @@
 import sys
 import os
 import string
+import traceback
 
 
 
@@ -60,6 +61,30 @@ else:
     sys.stdout = lg.stdout()
 
 
+################################################################################
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+import base64
+
+class DiskStore(web.session.DiskStore):
+    def decode(self, session_data):
+        """decodes the data to get back the session dict """
+        pickled = base64.decodestring(session_data)
+        #lg.debug("Store::decode() pickled=%s"%pickled, __name__)
+        try:
+            data=pickle.loads(pickled)
+            lg.debug("Store::decode() data=%s"%data, __name__)
+        except Exception, err:
+            lg.error("Store::decode() Exception: error '%s'"%err, __name__)
+            traceback.print_exc(file=sys.stderr)
+            return None
+        return data
+################################################################################
+
+
+
 lg.debug("Loading modules", __name__)
 import thinfilter.modules
 thinfilter.common.init_modules(thinfilter.modules)
@@ -75,7 +100,7 @@ render = web.template.render(thinfilter.config.BASE + 'templates/')
 # from http://webpy.org/cookbook/session_with_reloader
 # use only one session instead of debug=True
 if web.config.get('_session') is None:
-    session = web.session.Session(app, web.session.DiskStore(thinfilter.config.SESSIONS_DIR), {'user': ''})
+    session = web.session.Session(app, DiskStore(thinfilter.config.SESSIONS_DIR), {'user': ''})
     web.config._session = session
 else:
     session = web.config._session
@@ -96,11 +121,11 @@ if __name__ == "__main__":
     lg.debug("main() sys.argv=%s args=%s" %(sys.argv,args) )
     if "--start" in args:
         lg.debug("daemonize....")
-        #thinblue.daemonize.start_server()
+        #thinfilter.daemonize.start_server()
         app.run()
     
     elif "--stop" in args:
-        #thinblue.daemonize.stop_server(sys.argv[0])
+        thinfilter.daemonize.stop_server(sys.argv[0])
         pass
     
     else:
