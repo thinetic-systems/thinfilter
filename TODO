@@ -1,0 +1,59 @@
+PAQUETES
+  * thinfilter-common => parte comun para todos
+  * thinfilter => paquete que se instala en el proxy depende de thinfilter-common
+  * thinfilter-webservice => se instala en thinetic.com
+
+DEMONIOS
+
+  * thinfilter => web y configurador
+  * thinfilter-cron => busca los metodos cron() de cada módulo y los ejecuta
+                    => watchdog para thinfilter (rearrancarlo en caso de que se muera)
+  * thinfiltersrv => se ejecuta en el servidor de thinetic como XMLRPC webservice
+
+MODULOS
+
+  == modulo cortafuegos ==
+   [HECHO]* como base el script de bosco_secre fw.proxy
+   [HECHO]* Separar variables de acciones (archivo de configuración parseable desde python)
+   [HECHO]* permitir añadir excepciones para puerto+IP o puertos para todos
+   [HECHO]* permitir abrir puertos a una máquina en concreto
+   * mostrar estadísticas del cortafuegos (parseando 'iptables -L -n -v' & 'iptables -L -n -v -t nat')
+   [HECHO]* modo permisivo y ONLY_WEB
+
+  == modulo bloqueo + squidGuard ==
+   * mostrar pantalla de bloqueo con mensajes informativos
+   * usar base de datos para generar reglas de squidGuard
+   * reinicia squid
+
+  == modulo stats ==
+   * mostrar estadisticas CPU, memoria, red, carga y uptime
+   * llamar desde crontab (cada 5 minutos) al actualizador
+
+  == modulo red ==
+   * configurar red pública y privada
+   * activar/desactivar DNS, DHCP
+   * configurar DHCP: rango, gateway y DNS
+   * configurar DNS cache: DNS maestros /etc/resolv.conf.real
+
+  == modulo VPN ==
+   * Inicializar VPN (generando certificados raíz...) pedir IP pública del servidor como fija
+   * Añadir usuarios
+   * Descargar zip con certificados (o mandar por correo)
+   * Dar de baja usuarios (revoke)
+   * Crear tunel en modo VPN cliente a otras sedes
+
+  == modulo filtro ==
+   * Mostrar/configurar lista blanca|negra
+   * Activar/desactivar filtro compartido
+   * Actualizar filtro compartido (todo o por partes) (editar squidGuard.conf)
+   * Configurar private webservice APIkey
+   * Actualizable mediante crontab
+
+  == modulo samba ==
+   * gestionar recursos compartidos
+   * gestionar usuarios y contraseñas de recursos
+ 
+
+  == WebService API ==
+   * Descargar lista por filtro (url|dominio|expresion) o (blanca|negra)
+   * Subir reglas (y pasar a estado revisión)

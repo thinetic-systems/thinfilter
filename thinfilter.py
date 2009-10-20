@@ -75,7 +75,7 @@ class DiskStore(web.session.DiskStore):
         #lg.debug("Store::decode() pickled=%s"%pickled, __name__)
         try:
             data=pickle.loads(pickled)
-            lg.debug("Store::decode() data=%s"%data, __name__)
+            #lg.debug("Store::decode() data=%s"%data, __name__)
         except Exception, err:
             lg.error("Store::decode() Exception: error '%s'"%err, __name__)
             traceback.print_exc(file=sys.stderr)
@@ -120,7 +120,7 @@ if __name__ == "__main__":
     sys.argv=[sys.argv[0], '9090']
     lg.debug("main() sys.argv=%s args=%s" %(sys.argv,args) )
     if "--start" in args:
-        lg.debug("daemonize....")
+        #lg.debug("daemonize....")
         #thinfilter.daemonize.start_server()
         app.run()
     

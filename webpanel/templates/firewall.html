@@ -1,0 +1,134 @@
+$def with (data, action='Guardar')
+
+
+<script type="text/javascript">
+var baseip='10.0.0.';
+function addIP(elem){
+    if(! $$("#"+elem)[0]) return;
+    var obj=$$("#"+elem)[0];
+    var ip = prompt('Completa la IP:', baseip); 
+    obj.options[obj.options.length] = new Option(ip, ip);
+}
+
+function delete_selected(elem){
+    if(! $$("#"+elem)[0]) return;
+    var obj=$$("#"+elem)[0];
+    for (var i = obj.length - 1; i>=0; i--) {
+        if (obj.options[i].selected) {
+          obj.remove(i);
+        }
+    }
+}
+
+function dosubmit(){
+    $$('#NOPROXY_PORTS')[0].value='';
+    $$('.noproxyport').each(function(i) {
+        if( $$('.noproxyport')[i].checked ) {
+            $$('#NOPROXY_PORTS')[0].value+=" "+ $$('.noproxyport')[i].id;
+        }
+    } );
+    console.log($$('#NOPROXY_PORTS')[0].value);
+    $$('#NOPROXY')[0].value='';
+    var obj=$$("#exceptions")[0];
+    for (var i = 0; i<obj.length; i++) {
+        $$('#NOPROXY')[0].value+=" "+ obj.options[i].value;
+    }
+    console.log($$('#NOPROXY')[0].value);
+    //$$('form')[0].submit();
+}
+
+$$(document).ready(function() {
+   if(! $$("#NOPROXY")[0]) return;
+   var obj=$$("#exceptions")[0];
+   var objvalues=$$("#NOPROXY")[0].value.split(' ');
+   for (var i = 0; i< objvalues.length ; i++) {
+        if (objvalues[i] != '') {
+            obj.options[obj.options.length] = new Option(objvalues[i], objvalues[i]);
+        }
+    }
+    var ports=$$("#NOPROXY_PORTS")[0].value.split(' ');
+    for (var i = 0; i< ports.length ; i++) {
+        $$('.noproxyport').each(function(z) {
+            if( $$('.noproxyport')[z].id == ports[i] ) {
+                $$('.noproxyport')[z].checked=true;
+            }
+        } );
+    }
+ });
+</script>
+<h1 class="clear">Configuración del cortafuegos</h1>
+
+<div id="popup"></div>
+
+<form method="post" action="/firewall">
+<table id="settings">
+    <tr>
+        <td>Activar VPN</td>
+        <td>
+            <input type="checkbox" name="vpn" id="vpn" value="1" $(data['form']['VPN_ENABLE'])>
+        </td>
+    </tr>
+    
+    <tr>
+        <td>Navegación sólo web <br/><small>En este modo se bloquea todo el tráfico excepto HTTP</small></td>
+        <td><input type="checkbox" name="web" id="web" value="1" $(data['form']['ONLY_WEB'])></td>
+    </tr>
+
+    <tr>
+        <td>Permitir ping (ICMP)</td>
+        <td><input type="checkbox" name="ICMP_ENABLE" id="ICMP_ENABLE" value="1" $(data['form']['ICMP_ENABLE'])></td>
+    </tr>
+
+    <tr>
+        <td>Permitir NTP (sincronización de hora)</td>
+        <td><input type="checkbox" name="NTP_ENABLE" id="NTP_ENABLE" value="1" $(data['form']['NTP_ENABLE'])></td>
+    </tr>
+
+
+    <tr><td colspan="2"><hr></td></tr>
+    <tr>
+        <td>Excepciones de equipos</td>
+        <td>
+        <select name="exceptions" id="exceptions" size='6'>
+        </select>
+        <input type="button" value="Añadir IP" onClick="javascript:addIP('exceptions');">
+        <input type="button" value="Borrar seleccionada" onClick="javascript:delete_selected('exceptions');">
+        <input type="hidden" id="NOPROXY" name="NOPROXY" value="$(data['NOPROXY'])">
+        </td>
+    </tr>
+    <tr>
+        <td>Excepciones de puertos</td>
+        <td>
+        <input type="hidden" id="NOPROXY_PORTS" name="NOPROXY_PORTS" value="$(data['NOPROXY_PORTS'])">
+        $for u in data['form']['ports']:
+            <input type="checkbox" class="noproxyport" name="$(u)" id="$(u)" value="1"> $(u) <small>$(data['form']['ports'][u])</small><br/>
+        </td>
+    </tr>
+    <tr><td colspan="2"><hr></td></tr>
+
+
+
+
+
+    <tr>
+        <td>Puertos abiertos para todos</td>
+        <td>
+        $for u in data['form']['ports']:
+            <input type="checkbox" class="allopenports" name="$(u)" id="$(u)" value="1"> $(u) <small>$(data['form']['ports'][u])</small><br/>
+        </td>
+    </tr>
+
+
+    
+    <tr><td colspan="2"><hr></td></tr>
+
+
+<tr>
+    <td>&nbsp;</td>
+    <td>
+        <input type="button" id="$action" value="$action" onClick="javascript:dosubmit();">
+    </td>
+</tr>
+</table>
+</form>
+

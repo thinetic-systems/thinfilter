@@ -47,8 +47,8 @@ data_files.append(('/var/lib/thindistro/changes/etc/squid3/', ['squid3/squid.con
 data_files.append(('/var/lib/thindistro/changes/etc/logrotate.d/', ['logrotate.d/squid3'] ))
 
 # dansguardian
-for f in get_recursive("dansguardian/", '/var/lib/thindistro/changes/etc/dansguardian/'):
-    data_files.append(f)
+#for f in get_recursive("dansguardian/", '/var/lib/thindistro/changes/etc/dansguardian/'):
+#    data_files.append(f)
 
 
 # firewall
@@ -65,9 +65,9 @@ setup(name='ThinFilter',
       license = 'GPLv2',
       platforms = ['linux'],
       keywords = ['proxy', 'squid', 'vpn'],
-      packages=['thinfilter' , 'thinfilter.modules'],
+      packages=['thinfilter' , 'thinfilter.modules', 'thinfilter.server'],
       package_dir = {'':''},
-      scripts=['thinfilter.py'],
+      scripts=['thinfilter.py', 'thinfilter-cron.py', 'thinfiltersrv.py'],
       data_files=data_files
       )
 

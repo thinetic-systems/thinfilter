@@ -1,0 +1,77 @@
+$def with (data, action='Guardar')
+
+<script type="text/javascript">
+var abspath="$(data['abspath'])";
+function changepath(){
+  $$("#path")[0].value=abspath + "/" + $$("#sharename")[0].value;
+}
+function delete_submit(){
+  $$("#delete")[0].value="$(data['form']['enabledelete'])";
+  $$('form')[0].submit();
+}
+</script>
+
+$if data['form']['enabledelete'] == '1':
+    <h1 class="clear"><img src="/data/folder.png" alt="Recursos"> Editar recurso compartido</h1>
+$else:
+    <h1 class="clear"><img src="/data/folder.png" alt="Recursos"> Nuevo recurso compartido</h1>
+
+
+$if data.has_key('error'):
+    <div class="error">$(data['error'])</div>
+
+<form method="post" action="/shares/share/">
+<table id="settings">
+    <tr>
+        <td>Nombre recurso</td>
+        <td><input type="text" name="sharename" id="sharename" value="$(data['form']['sharename'])" size='50' onChange='javascript:changepath();' $(data['form']['sharenamereadonly'])></td>
+    </tr>
+    <tr>
+        <td>Comentario</td>
+        <td><input type="text" name="comment" id="comment" value="$(data['form']['comment'])" size='50'></td>
+    </tr>
+    <tr>
+        <td>Ruta</td>
+        <td><input type="text" name="path" id="path" value="$(data['form']['path'])" size='50' readonly></td>
+    </tr>
+    <tr>
+        <td>Navegable/visible</td>
+        <td><input type="checkbox" name="browseable" id="browseable" value="yes" $(data['form']['browseable'])></td>
+    </tr>
+    <tr>
+        <td>Sólo lectura</td>
+        <td><input type="checkbox" name="read only" id="read only" value="yes" $(data['form']['read only'])></td>
+    </tr>
+    <tr>
+        <td>Anónimo</td>
+        <td><input type="checkbox" name="guest ok" id="guest ok" value="yes" $(data['form']['guest ok'])></td>
+    </tr>
+    <tr>
+        <td>Usuarios</td>
+        <td>
+            $if len(data['users'])< 1:
+                <div class="error" style="margin:0;width:100%">No hay usuarios <a href="/shares/user/new">añadir</a></div>
+            $else:
+                <ul>
+                $for u in data['users']:
+                    <li class="list"><input type="checkbox" name="user|$(u)" id="user|$(u)" value="yes" $(data['form']['user'][u])> $(u)</li>
+                </ul>
+        </td>
+    </tr>
+    
+    
+    <tr><td colspan="2"><hr></td></tr>
+
+
+<tr>
+  <td>&nbsp;</td>
+  <td>
+    <input type="submit" id="$action" value="$action">
+    $if data['form']['enabledelete'] == '1':
+        <input type="hidden" id="delete" name="delete" value="0">
+        <input type="button" value="$(data['form']['delete'])" onClick="javascript:delete_submit();">
+  </td>
+</tr>
+</table>
+</form>
+

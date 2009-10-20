@@ -59,12 +59,12 @@ def date_time_string(timestamp=None):
 
 class stats_images:
     def GET(self, sfile, extension):
-        #lg.debug("stats_images():GET() sfile=%s extension=%s"%(sfile, extension))
+        #lg.debug("stats_images():GET() sfile=%s extension=%s"%(sfile, extension), __name__)
         absfile=os.path.join(SARG_DIR, "%s%s"%(sfile,extension) )
         #lg.debug("stats_images::GET() SARG_DIR=%s sfile=%s absfile=%s" %(SARG_DIR, sfile, absfile), __name__ )
         if not os.path.isfile( absfile ):
             # return 404
-            lg.debug("stats_images() not found '%s'"%absfile)
+            lg.debug("stats_images() not found '%s'"%absfile, __name__)
             return web.notfound()
 
         # set headers (javascript, css, or images)
@@ -115,7 +115,7 @@ class stats(object):
             if extension:
                 fname="%s/%s%s"%(SARG_DIR, path,extension)
         
-        lg.debug("stats() fname=%s"%fname)
+        lg.debug("stats() fname=%s"%fname, __name__)
         
         if not fname or not os.path.isfile(fname):
             data.append("<h2 class='center'>404.- Periodo no encontrado</h2>")
@@ -147,8 +147,8 @@ class stats(object):
             elif "class=\"data2\"" in line or "class=\"data\"" in line:
                 # rewrite link
                 newline=line.replace('/index.html','').replace("href='","href='/").replace("href='","href='/stats/%s"%path)
-                #lg.debug("stats() line=%s"%line)
-                #lg.debug("stats() newline=%s"%newline)
+                #lg.debug("stats() line=%s"%line, __name__)
+                #lg.debug("stats() newline=%s"%newline, __name__)
                 data.append( newline )
                 data2=True
                 continue
@@ -177,6 +177,17 @@ def init():
     thinfilter.common.register_url('/stats/(.+?)(?:(\.[^.]*$)|$)$', 'thinfilter.modules.stats.stats')
     thinfilter.common.register_url('/stats-images/(.+?)(?:(\.[^.]*$)|$)$', 'thinfilter.modules.stats.stats_images')
 
+    """
+    <li><a href="/stats/Daily/">Accesos</a></li>
+    """
+    menu=thinfilter.common.Menu("/stats/Daily/", "Acesos", order=80)
+    thinfilter.common.register_menu(menu)
+    
+    """
+    <a class="qbutton" href="/stats/Daily/"><img src="/data/stats.png" alt="Estadísticas"><br/>Estadísticas</a>
+    """
+    button=thinfilter.common.Button("/stats/Daily/", "Estadísticas", "/data/stats.png")
+    thinfilter.common.register_button(button)
 
 
 

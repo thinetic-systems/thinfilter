@@ -1,0 +1,175 @@
+#!/bin/bash
+#
+#
+#
+#
+
+
+# load configuration
+[ -e /etc/thinfilter/firewall.conf ] && . /etc/thinfilter/firewall.conf
+
+[ -e ./firewall/firewall.conf ] && . ./firewall/firewall.conf
+
+########################################################################################################################
+# DO NOT MODIFY BELOW
+# Clean old firewall
+$IPTABLES -F
+$IPTABLES -X
+$IPTABLES -t nat -F
+$IPTABLES -t nat -X
+$IPTABLES -t mangle -F
+$IPTABLES -t mangle -X
+$IPTABLES -P INPUT ACCEPT
+$IPTABLES -P OUTPUT ACCEPT
+$IPTABLES -P FORWARD ACCEPT
+
+if [ "$1" = "off" ]; then
+  echo " * Firewall clean."
+  exit 0
+fi
+
+# Load IPTABLES modules for NAT and IP conntrack support
+$MODPROBE ip_conntrack
+$MODPROBE ip_conntrack_ftp
+
+# For win xp ftp client
+$MODPROBE ip_nat_ftp
+
+echo 1 > /proc/sys/net/ipv4/ip_forward || true
+
+# Setting default filter policy
+$IPTABLES -P INPUT DROP
+#$IPTABLES -P OUTPUT DROP
+if [ "$ONLY_WEB" = "1" ]; then
+  $IPTABLES -P FORWARD DROP
+fi
+
+# Unlimited access to loop back
+$IPTABLES -A INPUT -i lo -j ACCEPT
+$IPTABLES -A OUTPUT -o lo -j ACCEPT
+
+
+# Allow UDP, DNS and Passive FTP
+$IPTABLES -A INPUT -i $INTERNET -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+
+
+# set this system as a router for Rest of LAN
+$IPTABLES --table nat --append POSTROUTING --out-interface $INTERNET -j MASQUERADE
+# block all
+if [ "$ONLY_WEB" = "0" ]; then
+ $IPTABLES --append FORWARD --in-interface $LAN -j ACCEPT
+fi
+
+# unlimited access to LAN
+$IPTABLES -A INPUT -i $LAN -j ACCEPT
+$IPTABLES -A OUTPUT -o $LAN -j ACCEPT
+
+
+for data in $PORTS; do
+  IFACE=$(echo $data  | awk -F":" '{print $1}')
+  PROTO=$(echo $data  | awk -F":" '{print $2}')
+  PORT=$(echo $data   | awk -F":" '{print $3}')
+  $IPTABLES -A INPUT -i $IFACE -j ACCEPT -p $PROTO --dport $PORT
+  $IPTABLES -A OUTPUT -o $IFACE -j ACCEPT -p $PROTO --dport $PORT
+done
+
+
+# permitir ping ICMP
+if [ "$ICMP_ENABLE" = "1" ]; then
+    iptables -A INPUT -i $INTERNET -p icmp -j ACCEPT
+    iptables -A INPUT -i $LAN   -p icmp -j ACCEPT
+
+    # permitir ping en red interna
+    iptables -A FORWARD -o $LAN -p icmp -j ACCEPT
+    iptables -A FORWARD -i $LAN -p icmp -j ACCEPT
+fi
+
+# NTP
+if [ "$NTP_ENABLE" = "1" ]; then
+    iptables -A OUTPUT -o $INTERNET -p udp --sport 123 --dport 123 -m state --state NEW -j ACCEPT
+    iptables -A FORWARD -i $LAN -p udp --dport 123 -j ACCEPT
+    iptables -A FORWARD -o $LAN -p udp --sport 123 -j ACCEPT
+fi
+
+# Para openVPN 
+if [ "$VPN_ENABLE" = "1" ]; then
+    $IPTABLES -A INPUT -i $INTERNET -j ACCEPT -p udp --dport $VPN_PORT
+    $IPTABLES -A OUTPUT -o $INTERNET -j ACCEPT -p udp --dport $VPN_PORT
+    $IPTABLES -t nat -A POSTROUTING -s $VPN_LAN -o $LAN -j MASQUERADE
+    $IPTABLES -A INPUT -i $VPN_IFACE -j ACCEPT
+    $IPTABLES -A OUTPUT -o $VPN_IFACE -j ACCEPT
+    $IPTABLES -A FORWARD -i $VPN_IFACE -j ACCEPT
+fi
+
+
+# exceptions
+for IP in $NOPROXY; do
+  #echo " * Exception HTTPS IP=$IP"
+  for port in $NOPROXY_PORTS; do
+    $IPTABLES -A FORWARD -s $IP -i $LAN -p tcp --dport $port -j ACCEPT
+    $IPTABLES -A FORWARD -d $IP -o $LAN -p tcp --sport $port -j ACCEPT
+  done
+
+done
+
+for port in $ALL_OPEN_PORTS; do
+
+  if [ $port = "21" ] || [ $port = "20" ]; then
+    # Allow FTP connections @ port 21
+    $IPTABLES -A FORWARD -p tcp --sport 21 -m state --state ESTABLISHED -j ACCEPT
+    $IPTABLES -A FORWARD -p tcp --dport 21 -m state --state NEW,ESTABLISHED -j ACCEPT
+ 
+    # Allow Active FTP Connections
+    $IPTABLES -A FORWARD -p tcp --sport 20 -m state --state ESTABLISHED,RELATED -j ACCEPT
+    $IPTABLES -A FORWARD -p tcp --dport 20 -m state --state ESTABLISHED -j ACCEPT 
+ 
+    # Allow Passive FTP Connections
+    $IPTABLES -A FORWARD -p tcp --sport 1024: --dport 1024:  -m state --state ESTABLISHED -j ACCEPT
+    $IPTABLES -A FORWARD -p tcp --sport 1024: --dport 1024:  -m state --state ESTABLISHED,RELATED -j ACCEPT 
+
+  else
+
+    $IPTABLES -A FORWARD -i $LAN -p tcp --dport $port -j ACCEPT
+    $IPTABLES -A FORWARD -o $LAN -p tcp --sport $port -j ACCEPT
+
+  fi
+
+  
+done
+
+
+
+# DNAT port 80 request comming from LAN systems to squid 3128 ($SQUID_PORT) aka transparent proxy
+$IPTABLES -t nat -A PREROUTING -i $LAN -p tcp --dport $HTTP -j DNAT --to $SQUID_SERVER:$SQUID_PORT
+
+# if it is same system
+$IPTABLES -t nat -A PREROUTING -i $INTERNET -p tcp --dport $HTTP -j REDIRECT --to-port $SQUID_PORT
+
+
+# block all
+if [ "$ONLY_WEB" = "1" ]; then
+  # redirect DNS request to squid server port 53
+  $IPTABLES -t nat -A PREROUTING -i $LAN -p tcp --dport $DNS -j DNAT --to $SQUID_SERVER:$DNS
+  $IPTABLES -t nat -A PREROUTING -i $LAN -p udp --dport $DNS -j DNAT --to $SQUID_SERVER:$DNS
+  $IPTABLES -A FORWARD -i $LAN -j DROP
+fi
+
+
+# Logueando....
+[ "$LOG" = 1 ] && $IPTABLES -A INPUT -i $LAN -j LOG --log-prefix "[INPUT $LAN] "
+[ "$LOG" = 1 ] && $IPTABLES -A OUTPUT -o $LAN -j LOG --log-prefix "[OUTPUT $LAN] "
+[ "$LOG" = 1 ] && $IPTABLES -A FORWARD -o $LAN -j LOG --log-prefix "[FORWARD $LAN] "
+[ "$LOG" = 1 ] && $IPTABLES -A PREROUTING -t nat -i $LAN -j LOG --log-prefix "[PREROUTING $LAN] "
+[ "$LOG" = 1 ] && $IPTABLES -A POSTROUTING -t nat -o $INTERNET -j LOG --log-prefix "[POSTROUTING $LAN] "
+[ "$LOG" = 1 ] && $IPTABLES -A OUTPUT -t nat -o $INTERNET -j LOG --log-prefix "[OUTPUT.NAT $INTERNET] "
+
+
+# esto genera bastantes logs (interfaz pública)
+[ "$LOG" = 1 ] && $IPTABLES -A INPUT -i $INTERNET -j LOG --log-prefix "[INPUT $INTERNET] "
+#[ "$LOG" = 1 ] && $IPTABLES -A OUTPUT -o $INTERNET -j LOG --log-prefix "[OUTPUT $INTERNET] "
+[ "$LOG" = 1 ] && $IPTABLES -A FORWARD -o $INTERNET -j LOG --log-prefix "[FORWARD $INTERNET] "
+
+
+
+echo " * Firewall active..."

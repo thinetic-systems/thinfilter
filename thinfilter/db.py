@@ -36,10 +36,12 @@ mutex = threading.Lock()
 
 
 class Sqlite3(object):
-    def __init__(self, db):
+    def __init__(self, db=None):
         #lg.debug("MultiThreadOK():: init dbname=%s"%db, __name__)
         self.db=db
     def run(self, sql, exe=False):
+        if self.db is None:
+            return
         con = sqlite3.connect(self.db)
         con.isolation_level = None
         cursor = con.cursor()

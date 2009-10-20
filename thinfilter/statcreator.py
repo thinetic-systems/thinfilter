@@ -31,16 +31,21 @@ import sys
 import rrdtool
 import time
 import random
+import netifaces
 
 
+import thinfilter.config
+GRAPH_PATH=os.path.join( thinfilter.config.BASE, "graphs")
+
+import thinfilter.logger as log
 
 
 class CPU(object):
     def __init__(self):
-        self.fname="cpu"
+        self.fname="%s/cpu"%(GRAPH_PATH)
 
     def create(self):
-        rrdtool.create("%s.rrd"%self.fname,
+        rrdtool.create("%s.rrd"%(self.fname),
                 "--step=300",
                 "DS:load1:GAUGE:180:0:U",
                 "DS:load5:GAUGE:180:0:U",
@@ -75,7 +80,7 @@ class CPU(object):
                        "-t", "load1:load5:load15:user:nice:system",
                        "N:%s:%s:%s:%s:%s:%s"%(load1, load5, load15, user, nice, system)
                     )
-        print "CPU update ===> (N:%s:%s:%s:%s:%s:%s)"%(load1, load5, load15, user, nice, system)
+        log.info( "CPU update ===> (N:%s:%s:%s:%s:%s:%s)"%(load1, load5, load15, user, nice, system), __name__ )
 
     def graph(self):
         rrdtool.graph("%s.png"%self.fname,
@@ -127,7 +132,7 @@ class CPU(object):
                       "GPRINT:cpu:MAX:CPU usage maximum\: %lf%%",
                       "GPRINT:cpu:AVERAGE:CPU usage average\: %lf%%",
                       "COMMENT:	\\j")
-        print "updated %s.png"%self.fname
+        log.info("updated %s.png"%self.fname, __name__)
                     #### old
 #                      "CDEF:total=user,system,idle,+,+",
 #                      "CDEF:userpct=100,user,total,/,*",
@@ -201,9 +206,10 @@ class CPU(object):
 class Net():
     def __init__(self, iface="eth0"):
         self.iface=iface
+        self.fname="%s/%s"%(GRAPH_PATH, iface)
         
     def create(self):
-        rrdtool.create("%s.rrd"%self.iface,
+        rrdtool.create("%s.rrd"%self.fname,
                 "--step=300",
                 "DS:incoming:DERIVE:600:0:12500000",
                 "DS:outgoing:DERIVE:600:0:12500000",
@@ -213,7 +219,7 @@ class Net():
                 "RRA:AVERAGE:0.5:144:1460")
 
     def update(self):
-        if not os.path.isfile("%s.rrd"%self.iface):
+        if not os.path.isfile("%s.rrd"%self.fname):
             self.create()
         data={}
         f=open("/proc/net/dev", 'r')
@@ -232,15 +238,15 @@ class Net():
                 data['tx']="%s" %( int(tx) )
                 data['rx']="%s" %( int(rx) )
                 f.close()
-                rrdtool.update("%s.rrd"%self.iface,
+                rrdtool.update("%s.rrd"%self.fname,
                         "-t", "incoming:outgoing", 
                         "N:%s:%s"%(data['tx'], data['rx'])
                     )
-                print "NET update (%s)===> (N:%s:%s)"%(self.iface, data['tx'], data['rx'])
+                log.info( "NET update (%s)===> (N:%s:%s)"%(self.iface, data['tx'], data['rx']), __name__ )
                 return
 
     def graph(self):
-        rrdtool.graph("%s.png"%self.iface,
+        rrdtool.graph("%s.png"%self.fname,
                     "--imgformat", "PNG",
                     "--width", "600", "--height", "100",
                     "--start", "-1day",
@@ -251,8 +257,8 @@ class Net():
                     "--color", "BACK#EAE9EE",
                     "-t trafico en %s (diario)"%self.iface,
                     "-v KB por seg",
-                    "DEF:in=%s.rrd:incoming:AVERAGE"%self.iface,
-                    "DEF:out=%s.rrd:outgoing:AVERAGE"%self.iface,
+                    "DEF:in=%s.rrd:incoming:AVERAGE"%self.fname,
+                    "DEF:out=%s.rrd:outgoing:AVERAGE"%self.fname,
                     "CDEF:out_neg=out,-1,*",
                     "AREA:in#11EE11:Descarga",
                     "LINE1:in#009900",
@@ -265,7 +271,7 @@ class Net():
                     "GPRINT:out:AVERAGE:Media\: %3.2lf %SB/s",
                     "GPRINT:out:LAST:Actual\: %3.2lf %SB/s",
                     "HRULE:0#000000")
-        print "updated %s.png"%self.iface
+        log.info( "updated %s.png"%self.fname, __name__ )
 #                    "LINE1:outgoing#0000FF:subida en bytes por seg\\j",
 #                    "GPRINT:incoming:MAX:max in \\:%10.2lf %sBps",
 #                    "GPRINT:incoming:AVERAGE:med in \\:%10.2lf %sBps",
@@ -276,25 +282,5 @@ class Net():
 #                    )
 
 
-if __name__ == "__main__":
-    #app=CPU()
-    #app.update()
-    #if "graph" in sys.argv:
-    #    app.graph()
-    graph=update=False
-    if "graph" in sys.argv: graph=True
-    if "update" in sys.argv: update=True
-    
-    app=Net(iface="eth0")
-    if update: app.update()
-    if graph:  app.graph()
-    
-    app=Net(iface="eth1")
-    if update: app.update()
-    if graph: app.graph()
-    
-    app=CPU()
-    if update: app.update()
-    if graph:  app.graph()
 
 

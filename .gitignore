@@ -1,2 +1,6 @@
 openvpn/ipp.txt
 thinfilter.log
+webpanel/graphs/*rrd
+webpanel/graphs/*png
+server/server*
+server.db

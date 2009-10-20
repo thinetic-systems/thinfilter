@@ -64,7 +64,8 @@ margin: auto auto;
 
 #menu {
 /*    background-color:#1b5d91;*/
- margin:0 auto 0 auto; width:450px;
+ margin:0 auto 0 auto; width:650px;
+ margin-bottom: 90px;
  font-size: 0.9em;
 /*
     display: block;
@@ -206,3 +207,13 @@ input {
     vertical-align:middle;
 }
 
+
+.error{
+    width:70%; margin-left:15%; margin-right:15%;
+    background-color:#FFaa00;
+    text-align: center;
+}
+
+.list{
+list-style-type: none;
+}

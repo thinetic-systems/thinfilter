@@ -1,4 +1,4 @@
-
+$def with (buttons=[])
 <h1 class="clear">Interfaz de administración</h1>
 
 <div id="data" class="data">
@@ -7,10 +7,8 @@
 </div>
 
 <div id="qbuttons" class="clear">
-    
-    <a class="qbutton" href=""><img src="/data/wizard.png" alt="Asistente"><br/>Asistente</a>
-    <a class="qbutton" href="/network"><img src="/data/network.png" alt="Red"><br/>Configuración de Red</a>
-    <a class="qbutton" href="/stats/Daily/"><img src="/data/stats.png" alt="Estadísticas"><br/>Estadísticas</a>
+    $for button in buttons:
+        <a class="qbutton" href="$button.path"><img src="$button.img" alt="$button.name"><br/>$button.name</a>
 </div>
 
 <br class="clear">

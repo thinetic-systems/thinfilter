@@ -1,4 +1,4 @@
-$def with (body='', title='ThinFilter', session=None)
+$def with (body='', title='ThinFilter', session=None, menus=[])
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="es" lang="es">
 <head>
@@ -13,7 +13,7 @@ $def with (body='', title='ThinFilter', session=None)
 <div id="container">
 
 <div id="logo">
-    <img class="netimg margin20" src="/data/etc3300.png" title="ThinFilter">
+    <!--img class="netimg margin20" src="/data/etc3300.png" title="ThinFilter">-->
     <h1>ThinFilter</h1>
 </div>
 
@@ -21,35 +21,18 @@ $if session and session.user:
     <div id="menu" class="clear">
     <ul id="nav" class="dropdown dropdown-horizontal">
     <li><a href='/'>Inicio</a></li>
-    <li><span class="dir">Red</span>
+    $for menu in menus:
+        <li>
+        $if menu.path != "":
+            <a href="$menu.path">$menu.name</a>
+        $else:
+            <span class="dir">$menu.name</span>
         <ul>
-            <li><a href="/network">Configuración</a></li>
-            <li><a href="/network/dhcp">DHCP</a></li>
-            <li><a href="/network/stats">Estadísticas</a></li>
+        $if menu.submenus:
+            $for submenu in menu.submenus:
+                <li><a href="$submenu.path">$submenu.name</a></li>
         </ul>
-    </li>
-    <li><span class="dir">VPN</span>
-        <ul>
-            <li><a href="/vpn">Configuración</a></li>
-            <li><a href="/vpn/users">Usuarios</a></li>
-            <li><a href="/vpn/remote">Tunel</a></li>
-        </ul>
-    </li>
-    <li><span class="dir">Filtro</span>
-        <ul>
-            <li><a href="/settings/cache">Cache</a></li>
-            <li><a href="/settings/network">Red</a></li>
-            <li><a href="/settings/stats">Estadísticas</a></li>
-            <li><span class="dir">Filtro</span>
-                <ul>
-                    <li><a href="/filter/downloads">Descargas</a></li>
-                    <li><a href="/filter/phrases">Palabras</a></li>
-                    <li><a href="/filter/sites">Sitios</a></li>
-                </ul>
-            </li>
-        </ul>
-    </li>
-    <li><a href="/stats/Daily/">Accesos</a></li>
+        </li>
     <li><a href='/logout'>Salir</a></li>
     </ul>
     </div>

@@ -25,7 +25,7 @@
 import os
 import string
 
-
+version="__VERSION__"
 daemon = True
 debug = False
 name = "thinfilter"
@@ -63,11 +63,15 @@ elif os.path.abspath(os.curdir) == "/mnt/thinetic/git/thinfilter":
 
 IMAGE_EXTENSIONS=['png', 'jpg', 'jpeg', 'gif', 'bmp', 'ppm', 'pcx', 'tiff']
 ALLOWED_CHARS=string.letters + string.digits + '-_.'
+HIDDEN_INTERFACES=['lo', 'wmaster0', 'pan0', 'vboxnet0']
+SERVER_PORT=16895
 
 stop = False
 
 
 thread_verbose = False
 urls=[]
+menus=[]
+buttons=[]
 
 #print "D: thinblue.config loaded"

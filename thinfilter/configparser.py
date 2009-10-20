@@ -55,7 +55,7 @@ class ConfigParser:
                 self.values[sline.split('=')[0].strip()]=sline.split('=')[1].replace('"','').replace("'","").strip()
 
     def printdata(self):
-        lg.debug("printdata(): %s"%self.values)
+        lg.debug("printdata(): %s"%self.values, __name__)
 
 
     def setvar(self, varname, newvalue):
@@ -64,13 +64,13 @@ class ConfigParser:
             self.values[varname]=newvalue
             self.__modified=True
         else:
-            lg.info("setvar() varname=%s not found in self.values"%varname)
+            lg.info("setvar() varname=%s not found in self.values"%varname, __name__)
 
     def getvar(self, varname):
         if self.values.has_key(varname):
-            lg.debug("getvar() varname='%s' value='%s'" %(varname, self.values[varname]) )
+            lg.debug("getvar() varname='%s' value='%s'" %(varname, self.values[varname]), __name__ )
         else:
-            lg.info("getvar() varname=%s not found in self.values"%varname)
+            lg.info("getvar() varname=%s not found in self.values"%varname, __name__)
 
     def savetofile(self):
         if not self.__modified:
@@ -89,7 +89,7 @@ class ConfigParser:
             if "filterport" in l: print l
             f.write(l)
         f.close()
-        lg.info("savetofile() saved file \"%s\""%self.fname)
+        lg.info("savetofile() saved file \"%s\""%self.fname, __name__)
 
 
 if __name__ == "__main__":

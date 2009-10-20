@@ -72,7 +72,7 @@ class login(object):
             my_signin = signin_form()
             return render.login(my_signin)
         else:
-            return render.main()
+            return render.main(thinfilter.common.get_buttons())
     
     @thinfilter.common.layout(body='No logueado', title='ThinFilter Login')
     def POST(self):
@@ -83,7 +83,7 @@ class login(object):
         else:
             web.config._session.user=my_signin['username'].value
             lg.debug("login OK set session.user to %s" %my_signin['username'].value, __name__)
-            return render.main()
+            return render.main(thinfilter.common.get_buttons())
 
 class logout(object):
     def GET(self):

@@ -39,7 +39,7 @@ class settings(object):
     def GET(self, options=None):
         
         import thinfilter.rules
-        lg.debug("config::GET() options=%s" %options)
+        lg.debug("config::GET() options=%s" %options, __name__)
         
         if options == "cache":
             conf=thinfilter.rules.squid().getdata()

@@ -47,6 +47,9 @@ render = web.template.render(thinfilter.config.BASE + 'templates/')
   412  ./build-key cliente1
   425  openssl dhparam -out dh1024.pem 1024
   KEY_EMAIL="xxx@xxx" PASSIN="xxx" PASSOUT="xxxxx" ./build-key-pass
+
+# show info
+openssl x509 -text -in etc_openvpn/keys/server.crt | grep "Subject:"
 """
 
 OPENVPN_DIR="/etc/openvpn"
@@ -71,7 +74,7 @@ class OpenVpn(object):
         if file_exists("keys/ca.key"):
             return True
         cmd="%s/build-ca"%(self.dir)
-        lg.debug("OpenVpn::genCA()  cmd=%s"%cmd)
+        lg.debug("OpenVpn::genCA()  cmd=%s"%cmd, __name__)
         p = Popen(cmd, shell=True, bufsize=4096, stdout=PIPE, stderr=STDOUT, close_fds=True)
         for _line in p.stdout.readlines():
             line=_line.replace('\n','')
@@ -85,7 +88,7 @@ class OpenVpn(object):
         if file_exists("keys/dh1024.pem"):
             return True
         cmd="%s/build-dh"%(self.dir)
-        lg.debug("OpenVpn::genDH()  cmd=%s"%cmd)
+        lg.debug("OpenVpn::genDH()  cmd=%s"%cmd, __name__)
         p = Popen(cmd, shell=True, bufsize=4096, stdout=PIPE, stderr=STDOUT, close_fds=True)
         for _line in p.stdout.readlines():
             line=_line.replace('\n','')
@@ -100,7 +103,7 @@ class OpenVpn(object):
         if file_exists("keys/server.key"):
             return True
         cmd="%s/build-key-server server"%(self.dir)
-        lg.debug("OpenVpn::genServer()  cmd=%s"%cmd)
+        lg.debug("OpenVpn::genServer()  cmd=%s"%cmd, __name__)
         p = Popen(cmd, shell=True, bufsize=4096, stdout=PIPE, stderr=STDOUT, close_fds=True)
         for _line in p.stdout.readlines():
             line=_line.replace('\n','')
@@ -118,7 +121,7 @@ class OpenVpn(object):
         name=name.strip()
         sslenv={'FORCE_KEY_EMAIL':str(email), 'PASSIN':str(password), 'PASSOUT':str(password) }
         cmd="%s/build-key-pass '%s'"%(self.dir, name)
-        lg.debug("OpenVpn::genClient()  cmd=%s"%cmd)
+        lg.debug("OpenVpn::genClient()  cmd=%s"%cmd, __name__)
         p = Popen(cmd, shell=True, bufsize=4096, env=sslenv, stdout=PIPE, stderr=STDOUT, close_fds=True)
         for _line in p.stdout.readlines():
             line=_line.replace('\n','')
@@ -138,7 +141,7 @@ class OpenVpn(object):
         revoked=False
         name=name.strip()
         cmd="%s/revoke-full '%s'"%(self.dir, name)
-        lg.debug("OpenVpn::revokeClient()  cmd=%s"%cmd)
+        lg.debug("OpenVpn::revokeClient()  cmd=%s"%cmd, __name__)
         p = Popen(cmd, shell=True, bufsize=4096, stdout=PIPE, stderr=STDOUT, close_fds=True)
         for _line in p.stdout.readlines():
             line=_line.replace('\n','')
@@ -154,7 +157,7 @@ class OpenVpn(object):
     def getUser(self, user):
         # return info about user
         cmd="openssl x509 -in %s/keys/%s.crt -text"%(self.dir, user)
-        lg.debug("OpenVpn::getUser()  cmd=%s"%cmd)
+        lg.debug("OpenVpn::getUser()  cmd=%s"%cmd, __name__)
         p = Popen(cmd, shell=True, bufsize=4096, stdout=PIPE, stderr=STDOUT, close_fds=True)
         info=[]
         created=""
@@ -205,7 +208,7 @@ class FileVars(FileLoader):
             for key in ["KEY_SIZE", "CA_EXPIRE", "KEY_EXPIRE", "KEY_COUNTRY", "KEY_PROVINCE", "KEY_CITY", "KEY_ORG", "KEY_EMAIL"]:
                 if key in var:
                     data[key]=var.split("%s="%key)[1].strip().replace("'",'').replace('"','')
-                    lg.debug("FileVars(): data[%s]='%s' "%(key, var.split("%s="%key)[1].strip()) )
+                    lg.debug("FileVars(): data[%s]='%s' "%(key, var.split("%s="%key)[1].strip()), __name__ )
         return data
 
 class FileServer(FileLoader):
@@ -265,6 +268,21 @@ def init():
     """
     thinfilter.common.register_url('/vpn',    'thinfilter.modules.openvpn.vpn')
     thinfilter.common.register_url('/vpn/users',  'thinfilter.modules.openvpn.users')
+    
+    """
+    <li><span class="dir">VPN</span>
+        <ul>
+            <li><a href="/vpn">Configuración</a></li>
+            <li><a href="/vpn/users">Usuarios</a></li>
+            <li><a href="/vpn/remote">Tunel</a></li>
+        </ul>
+    </li>
+    """
+    menu=thinfilter.common.Menu("", "VPN")
+    menu.appendSubmenu("/vpn", "Configuración")
+    menu.appendSubmenu("/vpn/users", "Usuarios")
+    menu.appendSubmenu("/vpn/remote", "Tunel")
+    thinfilter.common.register_menu(menu)
 
 
 if __name__ == "__main__":

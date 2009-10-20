@@ -40,7 +40,7 @@ import thinfilter.common
 import web
 render = web.template.render(thinfilter.config.BASE + 'templates/')
 
-HIDDEN_INTERFACES=['lo', 'wmaster0']
+
 
 class Interfaces(object):
     def __init__(self, **kwargs):
@@ -103,7 +103,7 @@ class Interfaces(object):
     def __GetAllNetworkInterfaces__(self):
         self.allnetworkinterfaces=[]
         for dev in netifaces.interfaces():
-            if not dev in HIDDEN_INTERFACES:
+            if not dev in thinfilter.config.HIDDEN_INTERFACES:
                 ip=netifaces.ifaddresses(dev)
                 if ip.has_key(netifaces.AF_INET):
                     data=ip[netifaces.AF_INET][0]
@@ -125,7 +125,7 @@ class network(object):
     @thinfilter.common.islogged
     @thinfilter.common.layout(body='', title='Configuración Red')
     def GET(self, options=None):
-        lg.debug("network::GET() options=%s" %options)
+        lg.debug("network::GET() options=%s" %options, __name__)
         ifaces=Interfaces().get()
         return render.settings_net(ifaces, action='Guardar')
 
@@ -166,7 +166,7 @@ class DnsMasq(object):
             self.rawdata.append(_line)
             line=_line.strip()
             if not line == "" and not line.startswith("#"):
-                lg.debug("DnsMasq() append line '%s'"%line)
+                lg.debug("DnsMasq() append line '%s'"%line, __name__)
                 if line.startswith("listen-address="):
                     self.listen_address=line.split('=')[1]
                 elif line.startswith("dhcp-range="):
@@ -223,9 +223,9 @@ class dhcp(object):
     @thinfilter.common.islogged
     @thinfilter.common.layout(body='', title='Configuración DHCP')
     def GET(self, options=None):
-        lg.debug("dhcp::GET() options=%s" %options)
+        lg.debug("dhcp::GET() options=%s" %options, __name__)
         data=DnsMasq().get()
-        lg.debug("dhcp::GET() dnsmasq=%s" %data)
+        lg.debug("dhcp::GET() dnsmasq=%s" %data, __name__)
         return render.settings_dhcp(data, action='Guardar')
 
     @thinfilter.common.islogged
@@ -235,10 +235,10 @@ class dhcp(object):
         formdata=web.input()
         lg.debug("dhcp()::formdata=%s"%formdata, __name__)
         for param in data:
-            lg.debug("dhcp::POST() param=%s old=%s"%(param, data[param]) )
-            lg.debug("dhcp::POST() param=%s new=%s"%(param, getattr(formdata, param.replace('_','-')) ) )
+            lg.debug("dhcp::POST() param=%s old=%s"%(param, data[param]), __name__ )
+            lg.debug("dhcp::POST() param=%s new=%s"%(param, getattr(formdata, param.replace('_','-')) ), __name__ )
             data[param]=getattr(formdata, param.replace('_','-'))
-        lg.debug("dhcp::POST() data=%s"%data)
+        lg.debug("dhcp::POST() data=%s"%data, __name__)
         dnsmasq.save(data)
         return web.seeother('/network/dhcp')
 
@@ -246,7 +246,7 @@ class netStats(object):
     def __init__(self):
         self.ifaces=[]
         for dev in Interfaces().get():
-            if not dev['iface'] in HIDDEN_INTERFACES:
+            if not dev['iface'] in thinfilter.config.HIDDEN_INTERFACES:
                 tx_and_rx=self.__get_data__(dev)
                 self.ifaces.append(tx_and_rx)
 
@@ -325,7 +325,7 @@ class netgraph(object):
         sfile=str(sfile)
         from thinfilter.statcreator import Net, CPU
         lg.debug("netgraph()::GET sfile=%s"%sfile, __name__)
-        if "eth" in sfile:
+        if "eth" in sfile or "br" in sfile:
             app=Net(iface=str(sfile.split('.')[0]))
             app.graph()
         elif "cpu" in sfile:
@@ -336,7 +336,7 @@ class netgraph(object):
         web.header("Expires", thinfilter.common.date_time_string(time.time()+60*5)) # expires in 5 minutes
         web.header("Cache-Control", "max-age=300, must-revalidate") 
         web.header('Content-Type', 'image/png')
-        return open(str(sfile) ).read()
+        return open(str(app.fname + ".png") ).read()
 
 
 def init():
@@ -352,6 +352,27 @@ def init():
     thinfilter.common.register_url('/network/stats', 'thinfilter.modules.network.netstats')
     thinfilter.common.register_url('/network/netgraph/([a-zA-Z0-9-.]*)', 'thinfilter.modules.network.netgraph')
 
+    # register menus
+    """
+    <li><span class="dir">Red</span>
+        <ul>
+            <li><a href="/network">Configuración</a></li>
+            <li><a href="/network/dhcp">DHCP</a></li>
+            <li><a href="/network/stats">Estadísticas</a></li>
+        </ul>
+    </li>
+    """
+    menu=thinfilter.common.Menu("", "Red", order=10)
+    menu.appendSubmenu("/network", "Configuración")
+    menu.appendSubmenu("/network/dhcp", "DHCP")
+    menu.appendSubmenu("/network/stats", "Estadísticas")
+    thinfilter.common.register_menu(menu)
+    
+    """
+    <a class="qbutton" href="/network"><img src="/data/network.png" alt="Red"><br/>Configuración de Red</a>
+    """
+    button=thinfilter.common.Button("/network", "Configuración de Red", "/data/network.png")
+    thinfilter.common.register_button(button)
 
 
 

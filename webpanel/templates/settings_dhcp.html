@@ -19,7 +19,7 @@ $for v in data:
             <br/>
             <small>Direcciones DNS</small>
         </td>
-        <td><input type="text" name="$(v)" id="$(v)" value="$(data[v])">
+        <td><input type="text" name="$(v)" id="$(v)" value="$(data[v])" size=50>
         $if v == "dhcp-range":
             <br/><small>ejemplo [10.0.0.2,10.0.0.254,12h]</small>
         $elif v == "dns":
@@ -28,10 +28,10 @@ $for v in data:
     </tr>
     
     
-    <tr><td colspan="3"><hr></td></tr>
+    <tr><td colspan="2"><hr></td></tr>
 
 
-<tr><td colspan="2">&nbsp;</td><td><input type="submit" id="$action" value="$action"></td></tr>
+<tr><td>&nbsp;</td><td><input type="submit" id="$action" value="$action"></td></tr>
 </table>
 </form>
 
