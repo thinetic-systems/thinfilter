@@ -37,6 +37,7 @@ export KEY_CONFIG=`$EASY_RSA/whichopensslcnf $EASY_RSA`
 # so make sure you define
 # it correctly!
 export KEY_DIR="$EASY_RSA/keys"
+mkdir -p $KEY_DIR
 
 # Issue rm -rf warning
 echo NOTE: If you run ./clean-all, I will be doing a rm -rf on $KEY_DIR
@@ -66,3 +67,5 @@ export KEY_PROVINCE="VA"
 export KEY_CITY="Valladolid"
 export KEY_ORG="Thinetic Systems"
 export KEY_EMAIL="mario.izquierdo@thinetic.es"
+export KEY_OU="ThineticSystems"
+export KEY_CN="ThineticSystems"

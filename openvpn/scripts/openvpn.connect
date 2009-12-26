@@ -1,0 +1,41 @@
+#!/bin/sh
+
+
+VPNUSER=$1
+
+if [ "$VPNUSER" = "all" ] || [ "$VPNUSER" = "list" ]; then
+  echo "*********************************************"
+  openvpn-get-ip.sh all
+  echo "*********************************************"
+  exit 0
+fi
+
+if [ "$VPNUSER" = "alive" ]; then
+  echo "*********************************************"
+  for ip in $(openvpn-get-ip.sh all | awk '{print $1}'); do
+    ALIVE="**DEAD**"
+    ping -c 1 -w 1 $ip >/dev/null 2>&1 && ALIVE="ALIVE" 
+    echo $ip $ALIVE $(openvpn-get-ip.sh reverse $ip 2>/dev/null)
+  done
+  echo "*********************************************"
+  exit 0
+fi
+
+
+SSHUSER=$2
+if [ "$SSHUSER" = "" ]; then
+  SSH1=""
+else
+  SSH1="${SSHUSER}@"
+fi
+
+TO=$(openvpn-get-ip.sh "$1")
+if [ "$TO" = "" ]; then
+  $0 all
+  echo " * ERROR: unknow host $1"
+  exit 1
+fi
+
+echo " * Connecting with $VPNUSER => $TO ${SSH1}${TO} ..."
+
+ssh -t ${SSH1}${TO} screen -RD

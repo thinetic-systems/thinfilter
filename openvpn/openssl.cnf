@@ -41,7 +41,7 @@ default_ca	= CA_default		# The default ca section
 
 dir		= $ENV::KEY_DIR		# Where everything is kept
 certs		= $dir			# Where the issued certs are kept
-crl_dir		= $dir			# Where the issued crl are kept
+crl_dir		= $dir		 	# Where the issued crl are kept
 database	= $dir/index.txt	# database index file.
 new_certs_dir	= $dir			# default place for new certs.
 
@@ -279,7 +279,7 @@ authorityKeyIdentifier=keyid:always,issuer:always
 [ pkcs11_section ]
 engine_id = pkcs11
 dynamic_path = /usr/lib/engines/engine_pkcs11.so
-MODULE_PATH = $ENV::PKCS11_MODULE_PATH
-PIN = $ENV::PKCS11_PIN
+#MODULE_PATH = $ENV::PKCS11_MODULE_PATH
+#PIN = $ENV::PKCS11_PIN
 init = 0
 
