@@ -95,7 +95,7 @@ class CPU(object):
                       "--color", "SHADEA#EAE9EE",
                       "--color", "SHADEB#EAE9EE",
                       "--color", "BACK#EAE9EE",
-                      "-t cpu usage per day",
+                      "-t Uso de CPU por día",
                       "DEF:load1=%s.rrd:load1:AVERAGE"%self.fname,
                       "DEF:load5=%s.rrd:load5:AVERAGE"%self.fname,
                       "DEF:load15=%s.rrd:load15:AVERAGE"%self.fname,
@@ -110,27 +110,27 @@ class CPU(object):
                       "CDEF:idle=load15,100,cpu,-,100,/,*",
                       "HRULE:1#000000",
                       "COMMENT:	",
-                      "AREA:reluser#FF0000:CPU user",
+                      "AREA:reluser#FF0000:CPU usuario",
                       "STACK:relnice#00AAFF:CPU nice",
-                      "STACK:relsys#FFFF00:CPU system",
-                      "STACK:idle#00FF00:CPU idle",
+                      "STACK:relsys#FFFF00:CPU sistema",
+                      "STACK:idle#00FF00:CPU ocioso",
                       "COMMENT:	\\j",
                       "COMMENT:	",
-                      "LINE1:load1#000FFF:Load average 1 min",
-                      "LINE2:load5#000888:Load average 5 min",
-                      "LINE3:load15#000000:Load average 15 min",
+                      "LINE1:load1#000FFF:Carga media 1 min",
+                      "LINE2:load5#000888:Carga media 5 min",
+                      "LINE3:load15#000000:Carga media 15 min",
                       "COMMENT:	\\j",
                       "COMMENT:	\\j",
                       "COMMENT:\\j",
                       #"COMMENT:	",
-                      "GPRINT:load15:MIN:Load 15 min minimum\: %lf",
-                      "GPRINT:load15:MAX:Load 15 min maximum\: %lf",
-                      "GPRINT:load15:AVERAGE:Load 15 min average\: %lf",
+                      "GPRINT:load15:MIN:Carga en 15 min mínimo\: %lf",
+                      "GPRINT:load15:MAX:Carga en 15 min máximo\: %lf",
+                      "GPRINT:load15:AVERAGE:Carga en 15 min media\: %lf",
                       "COMMENT:	\\j",
                       "COMMENT:	",
-                      "GPRINT:cpu:MIN:CPU usage minimum\: %lf%%",
-                      "GPRINT:cpu:MAX:CPU usage maximum\: %lf%%",
-                      "GPRINT:cpu:AVERAGE:CPU usage average\: %lf%%",
+                      "GPRINT:cpu:MIN:Uso de CPU mínimo\: %lf%%",
+                      "GPRINT:cpu:MAX:Uso de CPU máximo\: %lf%%",
+                      "GPRINT:cpu:AVERAGE:Uso de CPU media\: %lf%%",
                       "COMMENT:	\\j")
         log.info("updated %s.png"%self.fname, __name__)
                     #### old
@@ -206,7 +206,8 @@ class CPU(object):
 class Net():
     def __init__(self, iface="eth0"):
         self.iface=iface
-        self.fname="%s/%s"%(GRAPH_PATH, iface)
+        secure_iface=iface.replace(':', '_')
+        self.fname="%s/%s"%(GRAPH_PATH, secure_iface)
         
     def create(self):
         rrdtool.create("%s.rrd"%self.fname,
@@ -240,9 +241,9 @@ class Net():
                 f.close()
                 rrdtool.update("%s.rrd"%self.fname,
                         "-t", "incoming:outgoing", 
-                        "N:%s:%s"%(data['tx'], data['rx'])
+                        "N:%s:%s"%(data['rx'], data['tx'])
                     )
-                log.info( "NET update (%s)===> (N:%s:%s)"%(self.iface, data['tx'], data['rx']), __name__ )
+                log.info( "NET update (%s)===> (N:%s:%s)"%(self.iface, data['rx'], data['tx']), __name__ )
                 return
 
     def graph(self):
@@ -255,7 +256,7 @@ class Net():
                     "--color", "SHADEA#EAE9EE",
                     "--color", "SHADEB#EAE9EE",
                     "--color", "BACK#EAE9EE",
-                    "-t trafico en %s (diario)"%self.iface,
+                    "-t Tráfico en interfaz %s (diario)"%self.iface,
                     "-v KB por seg",
                     "DEF:in=%s.rrd:incoming:AVERAGE"%self.fname,
                     "DEF:out=%s.rrd:outgoing:AVERAGE"%self.fname,
@@ -265,7 +266,7 @@ class Net():
                     "GPRINT:in:MAX:Max\: %3.2lf %SB/s",
                     "GPRINT:in:AVERAGE:Media\: %3.2lf %SB/s",
                     "GPRINT:in:LAST:Actual\: %3.2lf %SB/s\\j",
-                    "AREA:out_neg#0000FF:Subida  ",
+                    "AREA:out_neg#0000FF:Subida ",
                     "LINE1:out_neg#000088",
                     "GPRINT:out:MAX:Max\: %3.2lf %SB/s",
                     "GPRINT:out:AVERAGE:Media\: %3.2lf %SB/s",

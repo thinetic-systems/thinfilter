@@ -1,0 +1,70 @@
+$def with (ifaces, hdds)
+
+
+<!-- GRAPHAEL -->
+<!-- GRAPHAEL -->
+<!--<script language="javascript" src="/data/raphael.js" type="text/javascript"></script>-->
+<!--<script language="javascript" src="/data/g.raphael.js" type="text/javascript"></script>-->
+<!--<script language="javascript" src="/data/g.pie.js" type="text/javascript"></script>-->
+<!--<script language="javascript" src="/data/thinfilter.g.pie.js" type="text/javascript"></script>-->
+<!-- GRAPHAEL -->
+
+<!-- FLOT -->
+<!--[if IE]><script language="javascript" type="text/javascript" src="/data/excanvas.pack.js"></script><![endif]-->
+<script language="javascript" type="text/javascript" src="/data/jquery.js"></script>
+<script language="javascript" type="text/javascript" src="/data/jquery.flot.pie.pack.js"></script>
+<script language="javascript" src="/data/thinfilter.flot.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+
+$for hdd in hdds:
+    var data$(hdd) = {
+    items: [
+           {label: "Usado", data: $(hdds[hdd]['used'])},
+           {label: "Libre", data: $(hdds[hdd]['free'])},
+    ]
+    };
+
+
+window.onload = function () {
+$for hdd in hdds:
+    plot_hdd('#$(hdd)', data$(hdd));
+}
+</script>
+
+<h1>Uso de CPU</h1>
+    <div align="center">
+        <object id="graph" data="/livestats/cpu.svg" type="image/svg+xml" width="550" height="275">
+          <param name="src" value="/livestats/cpu.svg">
+          Your browser does not support this object type!<br>
+          <span class="red"><strong>Note:</strong></span>
+          The <a href="http://www.examotion.com/index.php?id=product_player_download" target="_blank">RENESIS Player</a> is required to view the graph.
+        </object>
+      </div>
+
+<br class="clear">
+
+<h1>Tráfico de red</h1>
+$for iface in ifaces:
+    <div style="float:left;">
+      <object id="graph"
+                data="/livestats/net.svg.$(iface)"
+                type="image/svg+xml"
+                width="550"
+                height="275">
+          <param name="src" value="/livestats/net.svg.$(iface)">
+          Your browser does not support this object type!<br>
+          <span class="red"><strong>Note:</strong></span>
+          The <a href="http://www.examotion.com/index.php?id=product_player_download" target="_blank">RENESIS Player</a> is required to view the graph.
+      </object>
+    </div>
+
+<br class="clear">
+
+$for hdd in hdds:
+    <div style="float:left;">
+        <h1>Uso de disco $(hdds[hdd]['mnt']) <small>($(hdds[hdd]['type']))</small></h1>
+        <div id="$(hdd)" style="width:400px;height:300px"></div>
+    </div>
+
+<br class="clear">

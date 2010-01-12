@@ -6,8 +6,9 @@ var baseip='10.0.0.';
 function addIP(elem){
     if(! $$("#"+elem)[0]) return;
     var obj=$$("#"+elem)[0];
-    var ip = prompt('Completa la IP:', baseip); 
-    obj.options[obj.options.length] = new Option(ip, ip);
+    var ip = prompt('Completa la IP:', baseip);
+    if (ip)
+        obj.options[obj.options.length] = new Option(ip, ip);
 }
 
 function delete_selected(elem){
@@ -101,7 +102,9 @@ $$(document).ready(function() {
         <td>
         <input type="hidden" id="NOPROXY_PORTS" name="NOPROXY_PORTS" value="$(data['NOPROXY_PORTS'])">
         $for u in data['form']['ports']:
-            <input type="checkbox" class="noproxyport" name="$(u)" id="$(u)" value="1"> $(u) <small>$(data['form']['ports'][u])</small><br/>
+            <input type="checkbox" class="noproxyport" name="$(u)" id="$(u)" value="1"> 
+            <acronym title="Puertos: $(data['form']['ports'][u])">$(u)</acronym>
+            <br/>
         </td>
     </tr>
     <tr><td colspan="2"><hr></td></tr>
@@ -114,7 +117,9 @@ $$(document).ready(function() {
         <td>Puertos abiertos para todos</td>
         <td>
         $for u in data['form']['ports']:
-            <input type="checkbox" class="allopenports" name="$(u)" id="$(u)" value="1"> $(u) <small>$(data['form']['ports'][u])</small><br/>
+            <input type="checkbox" class="allopenports" name="$(u)" id="$(u)" value="1">
+            <acronym title="Puertos: $(data['form']['ports'][u])">$(u)</acronym>
+            <br/>
         </td>
     </tr>
 

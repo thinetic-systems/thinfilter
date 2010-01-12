@@ -31,6 +31,8 @@ import sys
 from subprocess import Popen, PIPE, STDOUT
 import glob
 
+sys.path.append('/home/mario/thinetic/git/thinfilter')
+sys.path.append('/mnt/thinetic/git/thinfilter')
 
 import thinfilter.logger as lg
 import thinfilter.config
@@ -58,9 +60,9 @@ OPENVPN_DIR="/etc/openvpn"
 def file_exists(fname):
     absfile=os.path.join(OPENVPN_DIR, fname)
     if os.path.isfile( absfile ):
-        lg.debug("OpenVpn::genCA() %s exists"%absfile, __name__)
+        #lg.debug("OpenVpn::file_exists() %s exists"%absfile, __name__)
         return True
-    lg.debug("OpenVpn::genCA() %s ***NO*** exists, creating..."%absfile, __name__)
+    lg.debug("OpenVpn::file_exists() %s ***NO*** exists, creating..."%absfile, __name__)
     return False
 
 
@@ -73,13 +75,15 @@ class OpenVpn(object):
         buildCA=False
         if file_exists("keys/ca.key"):
             return True
+        # exec clean-all
+        thinfilter.common.run("%s/clean-all"%(self.dir), verbose=True, _from=__name__)
+        # build ca
         cmd="%s/build-ca"%(self.dir)
         lg.debug("OpenVpn::genCA()  cmd=%s"%cmd, __name__)
-        p = Popen(cmd, shell=True, bufsize=4096, stdout=PIPE, stderr=STDOUT, close_fds=True)
-        for _line in p.stdout.readlines():
-            line=_line.replace('\n','')
+        out=thinfilter.common.run(cmd, verbose=True)
+        for line in out:
             lg.debug("OpenVpn::genCA()   %s"%line, __name__)
-            if "writing new private" in line:
+            if file_exists("keys/ca.crt"):
                 buildCA=True
         return buildCA
 
@@ -112,9 +116,23 @@ class OpenVpn(object):
                 buildServer=True
         return buildServer
 
+    def genCRL(self):
+        buildCRL=False
+        if file_exists("keys/crl.pem"):
+            return True
+        cmd="%s/make-crl crl.pem"%(self.dir)
+        lg.debug("OpenVpn::genCRL()  cmd=%s"%cmd, __name__)
+        p = Popen(cmd, shell=True, bufsize=4096, stdout=PIPE, stderr=STDOUT, close_fds=True)
+        for _line in p.stdout.readlines():
+            line=_line.replace('\n','')
+            lg.debug("OpenVpn::genCRL()   %s"%line, __name__)
+            if file_exists("keys/crl.pem"):
+                buildCRL=True
+        return buildCRL
+
     def genClient(self, name, email, password):
         name=name.strip()
-        if file_exists("keys/%s.key"%name):
+        if file_exists("keys/%s.key"%(name)):
             return True
         #KEY_EMAIL="xxx@xxx" PASSIN="xxx" PASSOUT="xxxxx" ./build-key-pass
         buildClient=False
@@ -136,7 +154,7 @@ class OpenVpn(object):
         crl-verify /etc/openvpn/keys/crl.pem
         """
         name=name.strip()
-        if not file_exists("keys/%s.key"%name):
+        if not file_exists("keys/%s.key"%(name) ):
             return True
         revoked=False
         name=name.strip()
@@ -148,11 +166,48 @@ class OpenVpn(object):
             lg.debug("OpenVpn::revokeClient()   %s"%line, __name__)
             if "certificate revoked" in line:
                 revoked=True
-        for f in glob.glob( os.path.join(self.dir, "keys/%s.*"%name) ):
-            absf=os.path.abspath(os.path.join(self.dir,f))
-            lg.debug("OpenVpn::revokeClient() deleting %s"%absf, __name__)
-            os.unlink( absf )
+#        for f in glob.glob( os.path.join(self.dir, "keys/%s.*"%name) ):
+#            absf=os.path.abspath(os.path.join(self.dir,f))
+#            lg.debug("OpenVpn::revokeClient() deleting %s"%absf, __name__)
+#            os.unlink( absf )
         return revoked
+
+    def getName(self, serial):
+        out=thinfilter.common.run("openssl x509 -text -in %s/keys/%s.pem"%(self.dir, serial), verbose=False, _from=__name__)
+        for line in out:
+            if "Subject" in line:
+                for item in line.split():
+                    if "CN=" in item:
+                        name=item.split('=')[1].split('/')[0]
+                return name
+        return ''
+
+    def getRevoked(self):
+        cmd="%s/list-crl"%(self.dir)
+        found=False
+        index=0
+        revoked=[]
+        out=thinfilter.common.run(cmd, verbose=False, _from=__name__)
+        for line in out:
+            if "Revoked Certificates:" in line:
+                found=True
+                continue
+            if found and "Serial" in line:
+                #print line.split()
+                revoked.append({'serial': line.split()[2]})
+                continue
+            if found and "Revocation Date" in line:
+                revoked[index]['date']=" ".join(line.split()[2:])
+                revoked[index]['name']=self.getName(revoked[index]['serial'])
+                index=index+1
+                continue
+        return revoked
+
+    def isUserRevoked(self, user):
+        for cert in self.getRevoked():
+            if cert.has_key('name') and user == cert['name']:
+                return True
+        return False
 
     def getUser(self, user):
         # return info about user
@@ -175,6 +230,7 @@ class OpenVpn(object):
                 #lg.debug("OpenVpn::getUser() %s"%line, __name__)
         info.append("Creado=%s"%" ".join(created).strip())
         info.append("Expira=%s"%" ".join(expires).strip())
+        info.append("Revocado=%s"%( self.isUserRevoked(user) ))
         return info
 
 
@@ -289,22 +345,30 @@ if __name__ == "__main__":
     thinfilter.config.daemon=False
     thinfilter.config.debug=True
     
-    #print OpenVpn().genCA()
-    #print OpenVpn().genDH()
-    #print OpenVpn().genServer()
-    #print OpenVpn().genClient('mario.izquierdo3', 'mario@thinetic.es', 'prueba1')
+#    print "CA     ", OpenVpn().genCA()
+#    print "DH     ", OpenVpn().genDH()
+#    print "server ", OpenVpn().genServer()
+#    print "CRL    ", OpenVpn().genCRL()
+#    
+#    print "adduser ", OpenVpn().genClient('mario.izquierdo', 'mario@thinetic.es', 'pass')
+    print OpenVpn().getUser('mario.izquierdo')
+#    print "adduser ", OpenVpn().genClient('mario.izquierdo2', 'mario@thinetic.es', 'pass')
+    
+    #print OpenVpn().getRevoked()
+    
     #print OpenVpn().revokeClient('mario.izquierdo')
+    #print OpenVpn().getUser('mario.izquierdo')
     #print OpenVpn().revokeClient('mario.izquierdo4')
     #print OpenVpn().revokeClient('mario.izquierdo5')
     #print OpenVpn().genClient('mario', 'mario@thinetic.es', 'prueba1')
     #print OpenVpn().revokeClient('mario')
-    #print OpenVpn().getUser('mario')
+
     
     #print FileLoader("vars").get()
     #print FileVars().get()
     #print FileServer().get()
 
-    print getUsers().get()
+    #print getUsers().get()
 
 
 

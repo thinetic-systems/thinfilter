@@ -60,6 +60,7 @@ VARS=[
       'NOPROXY',
       'NOPROXY_PORTS',
       'ALL_OPEN_PORTS',
+      'KNOW_PORTS',
       ]
 
 FW_PORTS={
@@ -81,7 +82,7 @@ class FireWall(thinfilter.common.Base):
                        'ONLY_WEB': '',
                        'ICMP_ENABLE':'',
                        'NTP_ENABLE':'',
-                       'ports':FW_PORTS,
+                       'ports':{},
                         }
         
         for line in data:
@@ -94,11 +95,17 @@ class FireWall(thinfilter.common.Base):
                     if self.vars.has_key(l):
                         value=self.vars[l]
                     if value == "1":
-                        lg.debug("%s enabled"%(l), __name__)
+                        #lg.debug("%s enabled"%(l), __name__)
                         self.formvars[l]=' checked'
-                    else:
-                        lg.debug("%s disabled '%s'"%(l, value), __name__)
+                    #else:
+                    #    lg.debug("%s disabled '%s'"%(l, value), __name__)
         self.vars['form']=self.formvars
+        
+        for item in self.vars['KNOW_PORTS'].split(' '):
+            #print item
+            if ":" in item:
+                (name,ports)=item.split(':')
+                self.vars['form']['ports'][name]=ports
 
     def save(self, newdata):
         for l in newdata:
@@ -151,31 +158,56 @@ class firewall(object):
         return web.seeother('/firewall')
 
 
+class ports(object):
+    @thinfilter.common.islogged
+    @thinfilter.common.layout(body='', title='Configuración de puertos')
+    def GET(self, options=None):
+        fobj=FireWall()
+        firewall_vars=fobj.vars
+        #lg.debug("firewall::ports::GET() firewall=%s" %firewall_vars, __name__)
+        return render.firewall_ports(firewall_vars, 'Guardar')
+
+    @thinfilter.common.islogged
+    def POST(self):
+        fobj=FireWall()
+        data=fobj.vars
+        formdata=web.input()
+        lg.debug("firewall()::ports::formdata=%s"%formdata, __name__)
+        ports={}
+        for elem in formdata:
+            if "name_" in elem:
+                portname=elem.replace('name_', '')
+                portnumbers=str(formdata['numbers_'+portname]).strip()
+                ports[portname.strip()]=portnumbers
+        print ports
+        portstxt=''
+        for p in ports:
+            if ports[p] == '': continue
+            portstxt+="%s:%s "%(p,ports[p])
+        fobj.vars['KNOW_PORTS']=portstxt
+        fobj.save(fobj.vars)
+        return web.seeother('/firewall/ports')
+
 
 
 def init():
     # nothing to check
     lg.debug("firewall::init()", __name__)
-    """
-        '/firewall',       'firewall',
-    """
-    thinfilter.common.register_url('/firewall',    'thinfilter.modules.firewall.firewall')
-    """
-    <li><span class="dir">Cortafuegos</span>
-        <ul>
-            <li><a href="/firewall">Configuración</a></li>
-        </ul>
-    </li>
-    """
-    menu=thinfilter.common.Menu("/firewall", "Cortafuegos")
+    thinfilter.common.register_url('/firewall',       'thinfilter.modules.firewall.firewall')
+    thinfilter.common.register_url('/firewall/ports', 'thinfilter.modules.firewall.ports')
+    
+    menu=thinfilter.common.Menu("", "Cortafuegos", order=30)
+    menu.appendSubmenu("/firewall", "Configuración")
+    menu.appendSubmenu("/firewall/ports", "Puertos conocidos")
     thinfilter.common.register_menu(menu)
 
 if __name__ == "__main__":
+    from pprint import pprint
     thinfilter.config.daemon=False
     thinfilter.config.debug=True
     
     app = FireWall()
-    app.restart()
+    pprint(app.vars)
     
 
 

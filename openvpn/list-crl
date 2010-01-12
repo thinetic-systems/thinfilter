@@ -1,6 +1,9 @@
 #!/bin/bash
-
 # list revoked certificates
+
+cd /etc/openvpn
+. vars
+
 
 CRL="${1:-crl.pem}"
 

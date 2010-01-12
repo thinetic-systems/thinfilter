@@ -52,6 +52,12 @@ lg.old_stdout=sys.stdout
 import web
 web.config.debug = False
 
+# load SSL cert
+from web.wsgiserver import CherryPyWSGIServer
+
+CherryPyWSGIServer.ssl_certificate = "thinfilter/ssl/server.crt"
+CherryPyWSGIServer.ssl_private_key = "thinfilter/ssl/server.key"
+
 
 if "--debug" in sys.argv:
     web.config.debug=True
@@ -62,33 +68,84 @@ else:
 
 
 ################################################################################
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-import base64
+#try:
+#    import cPickle as pickle
+#except ImportError:
+#    import pickle
+#import base64
 
-class DiskStore(web.session.DiskStore):
-    def decode(self, session_data):
-        """decodes the data to get back the session dict """
-        pickled = base64.decodestring(session_data)
-        #lg.debug("Store::decode() pickled=%s"%pickled, __name__)
-        try:
-            data=pickle.loads(pickled)
-            #lg.debug("Store::decode() data=%s"%data, __name__)
-        except Exception, err:
-            lg.error("Store::decode() Exception: error '%s'"%err, __name__)
-            traceback.print_exc(file=sys.stderr)
-            return None
-        return data
+#class DiskStore(web.session.DiskStore):
+#    def decode(self, session_data):
+#        """decodes the data to get back the session dict """
+#        #lg.debug("Store::decode() session_data=%s"%session_data, __name__)
+#        pickled = base64.decodestring(session_data)
+#        #lg.debug("Store::decode() pickled=%s"%pickled, __name__)
+#        try:
+#            data=pickle.loads(pickled)
+#            #lg.debug("Store::decode() data=%s"%data, __name__)
+#        except Exception, err:
+#            #lg.error("Store::decode() Exception: session_data '%s'"%session_data, __name__)
+#            #lg.error("Store::decode() Exception: pickled '%s'"%pickled, __name__)
+#            lg.error("Store::decode() Exception: error '%s'"%err, __name__)
+#            traceback.print_exc(file=sys.stderr)
+#            #return {'ip':'', 'user':'', 'session_id':''}
+#            return None
+#        #print data
+#        return data
+
+#class MySession(web.session.Session):
+#    def _load(self):
+#        """Load the session from the store, by the id from cookie"""
+#        cookie_name = self._config.cookie_name
+#        cookie_domain = self._config.cookie_domain
+#        self.session_id = web.cookies().get(cookie_name)
+
+#        # protection against session_id tampering
+#        if self.session_id and not self._valid_session_id(self.session_id):
+#            self.session_id = None
+
+#        self._check_expiry()
+#        if self.session_id:
+#            d = self.store[self.session_id]
+#            try:
+#                self.update(d)
+#            except:
+#                print "store=>%s"%self.store
+#                print "session_id=>", self.session_id
+#                print "d=>", d
+#                traceback.print_exc(file=sys.stderr)
+#            self._validate_ip()
+#        
+#        if not self.session_id:
+#            self.session_id = self._generate_session_id()
+
+#            if self._initializer:
+#                if isinstance(self._initializer, dict):
+#                    self.update(self._initializer)
+#                elif hasattr(self._initializer, '__call__'):
+#                    self._initializer()
+# 
+#        self.ip = web.ctx.ip
+
+#web.session.Session=MySession
 ################################################################################
 
+import shelve
+class ShelfStore(web.session.ShelfStore):
+    def __getitem__(self, key):
+        atime, v = self.shelf[key]
+        self[key] = v # update atime
+        return v
+
+store = ShelfStore(shelve.open(thinfilter.config.SESSIONS_DIR + '/session.shelf'))
+################################################################################
 
 
 lg.debug("Loading modules", __name__)
 import thinfilter.modules
 thinfilter.common.init_modules(thinfilter.modules)
 lg.debug("Modules loaded, here we go....", __name__)
+
 
 
 # global app
@@ -100,7 +157,8 @@ render = web.template.render(thinfilter.config.BASE + 'templates/')
 # from http://webpy.org/cookbook/session_with_reloader
 # use only one session instead of debug=True
 if web.config.get('_session') is None:
-    session = web.session.Session(app, DiskStore(thinfilter.config.SESSIONS_DIR), {'user': ''})
+    #session = web.session.Session(app, DiskStore(thinfilter.config.SESSIONS_DIR), {'user': ''})
+    session = web.session.Session(app, store, {'user': ''} )
     web.config._session = session
 else:
     session = web.config._session

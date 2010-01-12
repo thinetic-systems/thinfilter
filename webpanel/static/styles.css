@@ -64,7 +64,7 @@ margin: auto auto;
 
 #menu {
 /*    background-color:#1b5d91;*/
- margin:0 auto 0 auto; width:650px;
+ margin:0 auto 0 auto; width:680px;
  margin-bottom: 90px;
  font-size: 0.9em;
 /*
@@ -216,4 +216,8 @@ input {
 
 .list{
 list-style-type: none;
+}
+
+.portnumbers {
+    margin: 5px;
 }

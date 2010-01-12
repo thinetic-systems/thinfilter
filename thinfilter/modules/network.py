@@ -115,10 +115,11 @@ class Interfaces(object):
                         data['readonly']=""
                     data['link']=self.__getLink__(dev)
                     self.allnetworkinterfaces.append(data)
-        lg.debug ( "GetAllNetworkInterfaces() %s" %( self.allnetworkinterfaces ), __name__ )
+        #lg.debug ( "Interfaces::GetAllNetworkInterfaces() %s" %( self.allnetworkinterfaces ), __name__ )
         return self.allnetworkinterfaces
 
     def get(self):
+        lg.debug ( "Interfaces::get() %s" %( self.allnetworkinterfaces ), __name__ )
         return self.allnetworkinterfaces
 
 class network(object):
@@ -248,9 +249,11 @@ class netStats(object):
         for dev in Interfaces().get():
             if not dev['iface'] in thinfilter.config.HIDDEN_INTERFACES:
                 tx_and_rx=self.__get_data__(dev)
+                
                 self.ifaces.append(tx_and_rx)
 
     def __get_data__(self, _dev):
+        #lg.debug("netStats::__get_data__() _dev=%s"%_dev, __name__)
         data={'iface':_dev['iface'], 'link':_dev['link'], 'gateway':_dev['gateway'], 'tx':0, 'rx':0}
         dev=_dev['iface']
         f=open("/proc/net/dev", 'r')
@@ -262,9 +265,10 @@ class netStats(object):
                     rx=int(line.split()[1])
                 data['tx']="%.2f MiB" %( float(tx)/(1024*1024) )
                 data['rx']="%.2f MiB" %( float(rx)/(1024*1024) )
-                return data
+        return data
 
     def get(self):
+        #lg.debug("netStats::get() self.ifaces=%s"%self.ifaces, __name__)
         return self.ifaces
 
 
@@ -336,6 +340,7 @@ class netgraph(object):
         web.header("Expires", thinfilter.common.date_time_string(time.time()+60*5)) # expires in 5 minutes
         web.header("Cache-Control", "max-age=300, must-revalidate") 
         web.header('Content-Type', 'image/png')
+        lg.debug("netgraph::GET() fname=%s.png" %app.fname, __name__)
         return open(str(app.fname + ".png") ).read()
 
 
@@ -350,7 +355,7 @@ def init():
     thinfilter.common.register_url('/network',      'thinfilter.modules.network.network')
     thinfilter.common.register_url('/network/dhcp',  'thinfilter.modules.network.dhcp')
     thinfilter.common.register_url('/network/stats', 'thinfilter.modules.network.netstats')
-    thinfilter.common.register_url('/network/netgraph/([a-zA-Z0-9-.]*)', 'thinfilter.modules.network.netgraph')
+    thinfilter.common.register_url('/network/netgraph/([a-zA-Z0-9-:.]*)', 'thinfilter.modules.network.netgraph')
 
     # register menus
     """

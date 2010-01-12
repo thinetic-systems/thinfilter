@@ -4,6 +4,10 @@
 # Note that this script does a
 # rm -rf on $KEY_DIR so be careful!
 
+cd /etc/openvpn
+. vars
+
+
 if [ "$KEY_DIR" ]; then
     rm -rf "$KEY_DIR"
     mkdir "$KEY_DIR" && \

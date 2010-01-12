@@ -40,7 +40,7 @@ export KEY_DIR="$EASY_RSA/keys"
 mkdir -p $KEY_DIR
 
 # Issue rm -rf warning
-echo NOTE: If you run ./clean-all, I will be doing a rm -rf on $KEY_DIR
+#echo NOTE: If you run ./clean-all, I will be doing a rm -rf on $KEY_DIR
 
 # PKCS11 fixes
 export PKCS11_MODULE_PATH="dummy"

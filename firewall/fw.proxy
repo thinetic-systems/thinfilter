@@ -11,6 +11,19 @@
 [ -e ./firewall/firewall.conf ] && . ./firewall/firewall.conf
 
 ########################################################################################################################
+get_port_number() {
+  for p in $KNOW_PORTS; do
+    if [ "$(echo $p | grep -c ${1}:)" = "1" ]; then
+      #echo " get_port_number() $p " >&2
+      echo $p | awk -F":" '{print $2}' | sed -e 's/,/ /g'
+    fi
+  done
+}
+
+if [ "$SQUID_SERVER" = "" ]; then
+  SQUID_SERVER=127.0.0.1
+fi
+
 # DO NOT MODIFY BELOW
 # Clean old firewall
 $IPTABLES -F
@@ -77,19 +90,19 @@ done
 
 # permitir ping ICMP
 if [ "$ICMP_ENABLE" = "1" ]; then
-    iptables -A INPUT -i $INTERNET -p icmp -j ACCEPT
-    iptables -A INPUT -i $LAN   -p icmp -j ACCEPT
+    $IPTABLES -A INPUT -i $INTERNET -p icmp -j ACCEPT
+    $IPTABLES -A INPUT -i $LAN   -p icmp -j ACCEPT
 
     # permitir ping en red interna
-    iptables -A FORWARD -o $LAN -p icmp -j ACCEPT
-    iptables -A FORWARD -i $LAN -p icmp -j ACCEPT
+    $IPTABLES -A FORWARD -o $LAN -p icmp -j ACCEPT
+    $IPTABLES -A FORWARD -i $LAN -p icmp -j ACCEPT
 fi
 
 # NTP
 if [ "$NTP_ENABLE" = "1" ]; then
-    iptables -A OUTPUT -o $INTERNET -p udp --sport 123 --dport 123 -m state --state NEW -j ACCEPT
-    iptables -A FORWARD -i $LAN -p udp --dport 123 -j ACCEPT
-    iptables -A FORWARD -o $LAN -p udp --sport 123 -j ACCEPT
+    $IPTABLES -A OUTPUT -o $INTERNET -p udp --sport 123 --dport 123 -m state --state NEW -j ACCEPT
+    $IPTABLES -A FORWARD -i $LAN -p udp --dport 123 -j ACCEPT
+    $IPTABLES -A FORWARD -o $LAN -p udp --sport 123 -j ACCEPT
 fi
 
 # Para openVPN 
@@ -105,17 +118,20 @@ fi
 
 # exceptions
 for IP in $NOPROXY; do
-  #echo " * Exception HTTPS IP=$IP"
-  for port in $NOPROXY_PORTS; do
-    $IPTABLES -A FORWARD -s $IP -i $LAN -p tcp --dport $port -j ACCEPT
-    $IPTABLES -A FORWARD -d $IP -o $LAN -p tcp --sport $port -j ACCEPT
+  for portname in $NOPROXY_PORTS; do
+    ports=$(get_port_number "$portname")
+    for p in $ports; do
+      $IPTABLES -A FORWARD -s $IP -i $LAN -p all --dport $p -j ACCEPT
+      $IPTABLES -A FORWARD -d $IP -o $LAN -p all --sport $p -j ACCEPT
+    done
   done
-
 done
 
-for port in $ALL_OPEN_PORTS; do
+for portname in $ALL_OPEN_PORTS; do
 
-  if [ $port = "21" ] || [ $port = "20" ]; then
+  ports=$(get_port_number "$portname")
+  
+  if [ "$ports" = "21" ]; then
     # Allow FTP connections @ port 21
     $IPTABLES -A FORWARD -p tcp --sport 21 -m state --state ESTABLISHED -j ACCEPT
     $IPTABLES -A FORWARD -p tcp --dport 21 -m state --state NEW,ESTABLISHED -j ACCEPT
@@ -129,9 +145,10 @@ for port in $ALL_OPEN_PORTS; do
     $IPTABLES -A FORWARD -p tcp --sport 1024: --dport 1024:  -m state --state ESTABLISHED,RELATED -j ACCEPT 
 
   else
-
-    $IPTABLES -A FORWARD -i $LAN -p tcp --dport $port -j ACCEPT
-    $IPTABLES -A FORWARD -o $LAN -p tcp --sport $port -j ACCEPT
+    for p in $ports; do
+      $IPTABLES -A FORWARD -i $LAN -p all --dport $p -j ACCEPT
+      $IPTABLES -A FORWARD -o $LAN -p all --sport $p -j ACCEPT
+    done
 
   fi
 
@@ -144,7 +161,7 @@ done
 $IPTABLES -t nat -A PREROUTING -i $LAN -p tcp --dport $HTTP -j DNAT --to $SQUID_SERVER:$SQUID_PORT
 
 # if it is same system
-$IPTABLES -t nat -A PREROUTING -i $INTERNET -p tcp --dport $HTTP -j REDIRECT --to-port $SQUID_PORT
+#$IPTABLES -t nat -A PREROUTING -i $INTERNET -p tcp --dport $HTTP -j REDIRECT --to-port $SQUID_PORT
 
 
 # block all

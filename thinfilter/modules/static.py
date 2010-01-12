@@ -85,6 +85,17 @@ class static:
         
         return open(os.path.join(thinfilter.config.BASE, 'static', sfile)).read()
 
+class favicon:
+    def GET(self):
+        f=open(os.path.join(thinfilter.config.BASE, 'static' , 'favicon.ico'), 'rb')
+        fs = os.fstat( f.fileno())
+        web.header("Expires", date_time_string(time.time()+60*60*2)) # expires in 2 hours
+        web.header("Last-Modified", date_time_string(fs.st_mtime))
+        web.header("Content-Length", str(fs[6]))
+        web.header("Cache-Control", "max-age=3600, must-revalidate")
+        f.close()
+        web.header('Content-Type', 'image/ico')
+        return open(os.path.join(thinfilter.config.BASE, 'static', 'favicon.ico')).read()
 
 def init():
     # nothing to check
@@ -93,6 +104,7 @@ def init():
         '/data/([a-zA-Z0-9-.]*)', 'static'
     """
     thinfilter.common.register_url('/data/([a-zA-Z0-9-.]*)',      'thinfilter.modules.static.static')
+    thinfilter.common.register_url('/favicon.ico',      'thinfilter.modules.static.favicon')
 
 
 

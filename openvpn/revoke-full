@@ -6,7 +6,9 @@
 cd /etc/openvpn
 . ./vars
 
-CRL="keys/crl.pem"
+set -x
+
+CRL="crl.pem"
 RT="revoke-test.pem"
 
 if [ $# -ne 1 ]; then

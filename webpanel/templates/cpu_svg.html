@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="100%" height="100%" viewBox="0 0 200 100" preserveAspectRatio="none" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" onload="init(evt)">
+  <g id="graph">
+    <rect id="bg" x1="0" y1="0" width="100%" height="100%" fill="#EEEEEE" stroke="none" stroke-width="0" opacity="1"/>
+    <line id="axis_x" x1="0" y1="0" x2="0" y2="100%" fill="black" stroke="black"/>
+    <line id="axis_y" x1="0" y1="100%" x2="100%" y2="100%" fill="black" stroke="black"/>
+    <path id="graph_cpu"  d="M0 100 L 0 100" fill="none" stroke="#FF0000" stroke-opacity="0.8"/>
+    <text id="graph_in_lbl" x="5" y="8" fill="#FF0000" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="7">Carga de CPU <tspan id="graph_cpu_txt" fill="#FF0000" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="7"> </tspan></text>
+    <path id="grid"  d="M0 25 L 200 25 M0 50 L 200 50 M0 75 L 200 75" stroke="#C3C3C3" stroke-opacity="0.5"/>
+
+    <text id="grid_txt1" x="198" y="25" fill="gray" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="6" text-anchor="end">75%</text>
+    <text id="grid_txt2" x="198" y="50" fill="gray" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="6" text-anchor="end">50%</text>
+    <text id="grid_txt3" x="198" y="75" fill="gray" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="6" text-anchor="end">25%</text>
+    <text id="datetime" x="90" y="5" fill="black" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="4"> </text>
+    <text id="graphlast" x="90" y="11" fill="black" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="4">Mostrando los últimos 120 segundos</text>
+    <polygon id="axis_arrow_x" fill="black" stroke="black" points="200,100 198,98 198,100"/>
+
+    <text id="error" x="100" y="40"  visibility="hidden" fill="red" font-family="Arial" font-size="4" text-anchor="middle">No se pudo leer la carga de CPU</text>
+    <text id="collect_initial" x="100" y="40" visibility="hidden" fill="gray" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="4" text-anchor="middle">Cargando datos...</text>
+  </g>
+  <script type="text/ecmascript">
+    <![CDATA[
+
+/**
+ * getURL is a proprietary Adobe function, but it's simplicity has made it very
+ * popular. If getURL is undefined we spin our own by wrapping XMLHttpRequest.
+ */
+if (typeof getURL == 'undefined') {
+  getURL = function(url, callback) {
+    if (!url)
+      throw 'No URL for getURL';
+
+    try {
+      if (typeof callback.operationComplete == 'function')
+        callback = callback.operationComplete;
+    } catch (e) {}
+    if (typeof callback != 'function')
+      throw 'No callback function for getURL';
+
+    var http_request = null;
+    if (typeof XMLHttpRequest != 'undefined') {
+      http_request = new XMLHttpRequest();
+    }
+    else if (typeof ActiveXObject != 'undefined') {
+      try {
+        http_request = new ActiveXObject('Msxml2.XMLHTTP');
+      } catch (e) {
+        try {
+          http_request = new ActiveXObject('Microsoft.XMLHTTP');
+        } catch (e) {}
+      }
+    }
+    if (!http_request)
+      throw 'Both getURL and XMLHttpRequest are undefined';
+
+    http_request.onreadystatechange = function() {
+      if (http_request.readyState == 4) {
+        callback( { success : true,
+                    content : http_request.responseText,
+                    contentType : http_request.getResponseHeader("Content-Type") } );
+      }
+    }
+    http_request.open('GET', url, true);
+    http_request.send(null);
+  }
+}
+
+var SVGDoc = null;
+var plot_cpu = new Array();
+
+var max_num_points = 120;  // maximum number of plot data points
+var step = 200 / max_num_points ;
+
+function formatString(x) {
+  return (x < 0 || x > 9 ? "" : "0") + x;
+}
+
+function init(evt) {
+  SVGDoc = evt.target.ownerDocument;
+  fetch_data();
+}
+
+function fetch_data() {
+  getURL('cpu.update', plot_data);
+}
+
+function plot_data(obj) {
+  // Show datetimelegend
+  var now = new Date();
+  var datetime = now.getDate() + "/" + (now.getMonth()+1) + "/" + now.getFullYear() + ' ' +
+    formatString(now.getHours()) + ":" + formatString(now.getMinutes()) + ":" + formatString(now.getSeconds());
+  SVGDoc.getElementById('datetime').firstChild.data = datetime;
+
+	if (!obj.success)
+    return handle_error();  // getURL failed to get data
+
+  var t = obj.content;
+	var cpu = parseInt(t);
+	var scale;
+
+	if (!isNumber(cpu))
+    return handle_error();
+
+  switch (plot_cpu.length) {
+  	case 0:
+  		SVGDoc.getElementById("collect_initial").setAttributeNS(null, 'visibility', 'visible');
+      plot_cpu[0] = cpu;
+      setTimeout('fetch_data()',1000);
+      return;
+	case 1:
+    	SVGDoc.getElementById("collect_initial").setAttributeNS(null, 'visibility', 'hidden');
+    	break;
+  case max_num_points:
+		// shift plot to left if the maximum number of plot points has been reached
+		var i = 0;
+		while (i < max_num_points) {
+		  plot_cpu[i] = plot_cpu[++i];
+		}
+		plot_cpu.length--;
+  }
+
+	plot_cpu[plot_cpu.length] = cpu;
+	var index_plot = plot_cpu.length - 1;
+
+	SVGDoc.getElementById('graph_cpu_txt').firstChild.data = plot_cpu[index_plot] + '%';
+
+	scale = 100 / 100;
+
+  var path_cpu = "M 0 " + (100 - (plot_cpu[0] * scale));
+  for (i = 1; i < plot_cpu.length; i++)
+  {
+    var x = step * i;
+    var y_cpu = 100 - (plot_cpu[i] * scale);
+    path_cpu += " L" + x + " " + y_cpu;
+  }
+
+  SVGDoc.getElementById('error').setAttributeNS(null, 'visibility', 'hidden');
+  SVGDoc.getElementById('graph_cpu').setAttributeNS(null, 'd', path_cpu);
+
+	setTimeout('fetch_data()',1000);
+}
+
+function handle_error() {
+  SVGDoc.getElementById("error").setAttributeNS(null, 'visibility', 'visible');
+  setTimeout('fetch_data()',1000);
+}
+
+function isNumber(a) {
+    return typeof a == 'number' && isFinite(a);
+}
+    ]]>
+  </script>
+</svg>
+

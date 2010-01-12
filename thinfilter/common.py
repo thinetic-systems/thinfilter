@@ -96,15 +96,23 @@ def run(cmd, verbose=True, canfail=False, _from=__name__):
     
     result=[]
     running=True
-    p = Popen(cmd, shell=True, bufsize=0, stdout=PIPE, stderr=STDOUT, close_fds=True)
-    while running:
-        #print p
-        if p.poll() != None: running=False
-        line=p.stdout.readline()
+    p = Popen(cmd, shell=True, bufsize=4096, stdout=PIPE, stderr=STDOUT, close_fds=True)
+    for _line in p.stdout.readlines():
+        line=_line.replace('\n','')
         if line.strip() == '': continue
         if verbose:
             lg.debug( line.replace('\n', '') , _from)
         result.append( line.replace('\n','') )
+#    
+#    while running:
+#        #print p
+#        if p.poll() != None: running=False
+#        line=p.stdout.readline()
+#        if line.strip() == '': continue
+#        if verbose:
+#            lg.debug( line.replace('\n', '') , _from)
+#        result.append( line.replace('\n','') )
+#    p.wait()
 
     if canfail:
         if p.returncode == 2:

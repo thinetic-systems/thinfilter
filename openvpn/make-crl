@@ -5,6 +5,10 @@
 #
 #
 
+cd /etc/openvpn
+. vars
+
+
 if test $# -ne 1; then
         echo "usage: make-crl <crlfile.pem>";
         exit 1

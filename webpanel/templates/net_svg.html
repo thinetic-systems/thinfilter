@@ -1,0 +1,288 @@
+$def with (iface)
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="100%" height="100%" viewBox="0 0 200 100" preserveAspectRatio="none" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" onload="init(evt)">
+  <g id="graph">
+    <rect id="bg" x1="0" y1="0" width="100%" height="100%" fill="#EEEEEE" stroke="none" stroke-width="0" opacity="1"/>
+    <line id="axis_x" x1="0" y1="0" x2="0" y2="100%" fill="black" stroke="black"/>
+    <line id="axis_y" x1="0" y1="100%" x2="100%" y2="100%" fill="black" stroke="black"/>
+    <path id="graph_out" d="M0 100 L 0 100" fill="none" stroke="#FF0000" stroke-opacity="0.8"/>
+    <path id="graph_in"  d="M0 100 L 0 100" fill="none" stroke="#00CC00" stroke-opacity="0.8"/>
+    <path id="grid"  d="M0 25 L 200 25 M0 50 L 200 50 M0 75 L 200 75" stroke="#C3C3C3" stroke-opacity="0.5"/>
+    <text id="grid_txt1" x="198" y="25" fill="gray" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="6" text-anchor="end">75%</text>
+
+    <text id="grid_txt2" x="198" y="50" fill="gray" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="6" text-anchor="end">50%</text>
+    <text id="grid_txt3" x="198" y="75" fill="gray" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="6" text-anchor="end">25%</text>
+    <text id="graph_in_lbl" x="5" y="8" fill="#00CC00" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="7">Descarga <tspan id="graph_in_txt" fill="#00CC00" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="7"> </tspan></text>
+    <text id="graph_out_lbl" x="5" y="16" fill="#FF0000" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="7">Subida <tspan id="graph_out_txt" fill="#FF0000" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="7"> </tspan></text>
+    <text id="ifname" x="198" y="8" fill="black" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="8" text-anchor="end">Interfaz $(iface)</text>
+
+    <text id="switch_unit" x="90" y="5" fill="#435370" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="4" text-decoration="underline">Cambiar a bits/s</text>
+    <!--<text id="switch_scale" x="90" y="11" fill="#435370" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="4" text-decoration="underline">Autoescalar (Follow)</text>-->
+    <text id="datetime" x="90" y="17" fill="black" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="4"> </text>
+    <text id="graphlast" x="90" y="22" fill="black" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="4">Mostrando los últimos 120 segundos</text>
+    <polygon id="axis_arrow_x" fill="black" stroke="black" points="200,100 198,98 198,100"/>
+    <text id="error" x="100" y="40" visibility="hidden" fill="red" font-family="Arial" font-size="4" text-anchor="middle">No se pudieron leer los datos de $(iface)</text>
+
+    <text id="collect_initial" x="100" y="40" visibility="hidden" fill="gray" font-family="Tahoma, Verdana, Arial, Helvetica, sans-serif" font-size="4" text-anchor="middle">Cargando datos...</text>
+  </g>
+  <script type="text/ecmascript">
+    <![CDATA[
+
+/**
+ * getURL is a proprietary Adobe function, but it's simplicity has made it very
+ * popular. If getURL is undefined we spin our own by wrapping XMLHttpRequest.
+ */
+if (typeof getURL == 'undefined') {
+  getURL = function(url, callback) {
+    if (!url)
+      throw 'No URL for getURL';
+
+    try {
+      if (typeof callback.operationComplete == 'function')
+        callback = callback.operationComplete;
+    } catch (e) {}
+    if (typeof callback != 'function')
+      throw 'No callback function for getURL';
+
+    var http_request = null;
+    if (typeof XMLHttpRequest != 'undefined') {
+      http_request = new XMLHttpRequest();
+    }
+    else if (typeof ActiveXObject != 'undefined') {
+      try {
+        http_request = new ActiveXObject('Msxml2.XMLHTTP');
+      } catch (e) {
+        try {
+          http_request = new ActiveXObject('Microsoft.XMLHTTP');
+        } catch (e) {}
+      }
+    }
+    if (!http_request)
+      throw 'Both getURL and XMLHttpRequest are undefined';
+
+    http_request.onreadystatechange = function() {
+      if (http_request.readyState == 4) {
+        callback( { success : true,
+                    content : http_request.responseText,
+                    contentType : http_request.getResponseHeader("Content-Type") } );
+      }
+    }
+    http_request.open('GET', url, true);
+    http_request.send(null);
+  }
+}
+
+var SVGDoc = null;
+var last_ifin = 0;
+var last_ifout = 0;
+var last_ugmt = 0;
+var max = 0;
+var plot_in = new Array();
+var plot_out = new Array();
+
+var max_num_points = 120;  // maximum number of plot data points
+var step = 200 / max_num_points ;
+var unit = 'bytes';
+var scale_type = 'follow';
+
+function formatString(x) {
+  return (x < 0 || x > 9 ? "" : "0") + x;
+}
+
+function init(evt) {
+  SVGDoc = evt.target.ownerDocument;
+  SVGDoc.getElementById("switch_unit").addEventListener("mousedown", switch_unit, false);
+  //SVGDoc.getElementById("switch_scale").addEventListener("mousedown", switch_scale, false);
+
+  fetch_data();
+}
+
+function switch_unit(event)
+{
+  SVGDoc.getElementById('switch_unit').firstChild.data = 'Switch to ' + unit + '/s';
+  unit = (unit == 'bits') ? 'bytes' : 'bits';
+}
+
+function switch_scale(event)
+{
+  scale_type = (scale_type == 'up') ? 'follow' : 'up';
+  scale_type_text = (scale_type == 'up') ? 'Up' : 'Follow';
+  SVGDoc.getElementById('switch_scale').firstChild.data = 'AutoScale (' + scale_type_text + ')';
+}
+
+function fetch_data() {
+  getURL('net.update.$(iface)', plot_data);
+}
+
+function plot_data(obj) {
+  // Show datetimelegend
+  var now = new Date();
+  var datetime = now.getDate() + "/" + (now.getMonth()+1) + "/"  + now.getFullYear() + ' ' +
+    formatString(now.getHours()) + ":" + formatString(now.getMinutes()) + ":" + formatString(now.getSeconds());
+  SVGDoc.getElementById('datetime').firstChild.data = datetime;
+
+  if (!obj.success)
+    return handle_error();  // getURL failed to get data
+
+  var t = obj.content.split("|");
+  var ugmt = parseFloat(t[0]);  // ugmt is an unixtimestamp style
+  var ifin = parseInt(t[1]);    // number of bytes received by the interface
+  var ifout = parseInt(t[2]);   // number of bytes sent by the interface
+  var scale;
+
+  if (!isNumber(ifin) || !isNumber(ifout))
+    return handle_error();
+
+  var diff_ugmt  = ugmt - last_ugmt;
+  var diff_ifin  = ifin - last_ifin;
+  var diff_ifout = ifout - last_ifout;
+
+  if (diff_ugmt == 0)
+    diff_ugmt = 1;  /* avoid division by zero */
+
+  last_ugmt = ugmt;
+  last_ifin = ifin;
+  last_ifout = ifout;
+
+  switch (plot_in.length) {
+  	case 0:
+  		SVGDoc.getElementById("collect_initial").setAttributeNS(null, 'visibility', 'visible');
+		plot_in[0] = diff_ifin / diff_ugmt;
+		plot_out[0] = diff_ifout / diff_ugmt;
+		setTimeout('fetch_data()',2000);
+		return;
+	case 1:
+    	SVGDoc.getElementById("collect_initial").setAttributeNS(null, 'visibility', 'hidden');
+    	break;
+    case max_num_points:
+		// shift plot to left if the maximum number of plot points has been reached
+		var i = 0;
+		while (i < max_num_points) {
+		  plot_in[i] = plot_in[i+1];
+		  plot_out[i] = plot_out[++i];
+		}
+		plot_in.length--;
+		plot_out.length--;
+  }
+
+  plot_in[plot_in.length] = diff_ifin / diff_ugmt;
+  plot_out[plot_out.length]= diff_ifout / diff_ugmt;
+  var index_plot = plot_in.length - 1;
+
+  SVGDoc.getElementById('graph_in_txt').firstChild.data = formatSpeed(plot_in[index_plot], unit);
+  SVGDoc.getElementById('graph_out_txt').firstChild.data = formatSpeed(plot_out[index_plot], unit);
+
+  /* determine peak for sensible scaling */
+  if (scale_type == 'up') {
+    if (plot_in[index_plot] > max)
+      max = plot_in[index_plot];
+    if (plot_out[index_plot] > max)
+      max = plot_out[index_plot];
+  }
+  else if (scale_type == 'follow') {
+    i = 0;
+    max = 0;
+    while (i < plot_in.length) {
+      if (plot_in[i] > max)
+        max = plot_in[i];
+      if (plot_out[i] > max)
+        max = plot_out[i];
+      i++;
+    }
+  }
+
+  var rmax;  // max, rounded up
+
+  if (unit == 'bits') {
+    /* round up max, such that
+         100 kbps -> 200 kbps -> 400 kbps -> 800 kbps -> 1 Mbps -> 2 Mbps -> ... */
+    rmax = 12500;
+    i = 0;
+    while (max > rmax) {
+      i++;
+      if (i && (i % 4 == 0))
+        rmax *= 1.25;
+      else
+        rmax *= 2;
+    }
+  } else {
+    /* round up max, such that
+         10 KB/s -> 20 KB/s -> 40 KB/s -> 80 KB/s -> 100 KB/s -> 200 KB/s -> 400 KB/s -> 800 KB/s -> 1 MB/s ... */
+    rmax = 10240;
+    i = 0;
+    while (max > rmax) {
+      i++;
+      if (i && (i % 4 == 0))
+        rmax *= 1.25;
+      else
+        rmax *= 2;
+
+      if (i == 8)
+        rmax *= 1.024;
+    }
+  }
+
+  scale = 100 / rmax;
+
+  /* change labels accordingly */
+  SVGDoc.getElementById('grid_txt1').firstChild.data = formatSpeed(3*rmax/4,unit);
+  SVGDoc.getElementById('grid_txt2').firstChild.data = formatSpeed(2*rmax/4,unit);
+  SVGDoc.getElementById('grid_txt3').firstChild.data = formatSpeed(rmax/4,unit);
+
+  var path_in = "M 0 " + (100 - (plot_in[0] * scale));
+  var path_out = "M 0 " + (100 - (plot_out[0] * scale));
+  for (i = 1; i < plot_in.length; i++)
+  {
+    var x = step * i;
+    var y_in = 100 - (plot_in[i] * scale);
+    var y_out = 100 - (plot_out[i] * scale);
+    path_in += " L" + x + " " + y_in;
+    path_out += " L" + x + " " + y_out;
+  }
+
+  SVGDoc.getElementById('error').setAttributeNS(null, 'visibility', 'hidden');
+  SVGDoc.getElementById('graph_in').setAttributeNS(null, 'd', path_in);
+  SVGDoc.getElementById('graph_out').setAttributeNS(null, 'd', path_out);
+
+  setTimeout('fetch_data()',2000);
+}
+
+function handle_error() {
+  SVGDoc.getElementById("error").setAttributeNS(null, 'visibility', 'visible');
+  setTimeout('fetch_data()',2000);
+}
+
+function isNumber(a) {
+  return typeof a == 'number' && isFinite(a);
+}
+
+function formatSpeed(speed, unit) {
+  if (unit == 'bits')
+    return formatSpeedBits(speed);
+  if (unit == 'bytes')
+    return formatSpeedBytes(speed);
+}
+
+function formatSpeedBits(speed) {
+  // format speed in bits/sec, input: bytes/sec
+  if (speed < 125000)
+    return Math.round(speed / 125) + " Kbps";
+  if (speed < 125000000)
+    return Math.round(speed / 1250)/100 + " Mbps";
+  // else
+  return Math.round(speed / 1250000)/100 + " Gbps";  /* wow! */
+}
+
+function formatSpeedBytes(speed) {
+  // format speed in bytes/sec, input:  bytes/sec
+  if (speed < 1048576)
+    return Math.round(speed / 10.24)/100 + " KB/s";
+  if (speed < 1073741824)
+    return Math.round(speed / 10485.76)/100 + " MB/s";
+  // else
+  return Math.round(speed / 10737418.24)/100 + " GB/s";  /* wow! */
+}
+    ]]>
+  </script>
+</svg>
+
