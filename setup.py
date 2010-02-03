@@ -27,13 +27,13 @@ def get_recursive(ipath, dest):
     return fileList
 
 
-data_files.append(('share/thinfilter/static', get_files("webpanel/static") ))
-data_files.append(('share/thinfilter/templates', get_files("webpanel/templates") ))
+data_files.append(('share/thinfilter/webpanel/static', get_files("webpanel/static") ))
+data_files.append(('share/thinfilter/webpanel/templates', get_files("webpanel/templates") ))
 #for f in get_recursive("webpanel/", 'share/thinfilter/'):
 #    data_files.append(f)
 
 # openvpn easy-rsa2.0
-data_files.append(('/var/lib/thindistro/changes/etc/openvpn', get_files("openvpn") ))
+data_files.append(('/etc/openvpn', get_files("openvpn") ))
 
 # dnsmasq
 data_files.append(('/var/lib/thindistro/changes/etc/dnsmasq/', ['dnsmasq/dnsmasq.conf'] ))
@@ -44,7 +44,7 @@ data_files.append(('/var/lib/thindistro/changes/etc/', ['resolv.conf.dnsmasq'] )
 data_files.append(('/var/lib/thindistro/changes/etc/squid3/', ['squid3/squid.conf'] ))
 
 # squid logrotate
-data_files.append(('/var/lib/thindistro/changes/etc/logrotate.d/', ['logrotate.d/squid3'] ))
+#data_files.append(('/var/lib/thindistro/changes/etc/logrotate.d/', ['logrotate.d/squid3'] ))
 
 # dansguardian
 #for f in get_recursive("dansguardian/", '/var/lib/thindistro/changes/etc/dansguardian/'):
@@ -52,8 +52,11 @@ data_files.append(('/var/lib/thindistro/changes/etc/logrotate.d/', ['logrotate.d
 
 
 # firewall
-data_files.append(('/var/lib/thindistro/changes/etc/thinfilter/', get_files("firewall/") ))
+data_files.append(('/etc/thinfilter/', ["firewall/firewall.conf"] ))
+data_files.append(('sbin/', ["firewall/thinfilter.fw"] ))
 
+# thinfilter-cron
+data_files.append(('/etc/cron.d/', ["cron.d/thinfilter-cron"] ))
 
 
 setup(name='ThinFilter',
@@ -64,7 +67,7 @@ setup(name='ThinFilter',
       url = 'http://www.thinetic.es',
       license = 'GPLv2',
       platforms = ['linux'],
-      keywords = ['proxy', 'squid', 'vpn'],
+      keywords = ['proxy', 'squid', 'vpn', 'samba'],
       packages=['thinfilter' , 'thinfilter.modules', 'thinfilter.server'],
       package_dir = {'':''},
       scripts=['thinfilter.py', 'thinfilter-cron.py', 'thinfiltersrv.py'],

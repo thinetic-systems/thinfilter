@@ -86,6 +86,7 @@ class stats_images:
 
 class stats(object):
     @thinfilter.common.islogged
+    @thinfilter.common.isinrole('stats.stats')
     @thinfilter.common.layout(body='', title='Estadísticas')
     def GET(self, path, extension):
         if path: path=str(path)
@@ -180,7 +181,7 @@ def init():
     """
     <li><a href="/stats/Daily/">Accesos</a></li>
     """
-    menu=thinfilter.common.Menu("/stats/Daily/", "Acesos", order=80)
+    menu=thinfilter.common.Menu("/stats/Daily/", "Registros", order=80, role='stats.stats')
     thinfilter.common.register_menu(menu)
     
     """

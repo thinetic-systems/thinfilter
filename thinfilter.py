@@ -40,6 +40,9 @@ thinfilter.config.debug=False
 if "--debug" in sys.argv:
     thinfilter.config.debug=True
 
+if "--devel" in sys.argv:
+    thinfilter.config.devel=True
+
 
 import thinfilter.logger as lg
 
@@ -55,8 +58,9 @@ web.config.debug = False
 # load SSL cert
 from web.wsgiserver import CherryPyWSGIServer
 
-CherryPyWSGIServer.ssl_certificate = "thinfilter/ssl/server.crt"
-CherryPyWSGIServer.ssl_private_key = "thinfilter/ssl/server.key"
+# uncomment to enable SSL
+#CherryPyWSGIServer.ssl_certificate = "thinfilter/ssl/server.crt"
+#CherryPyWSGIServer.ssl_private_key = "thinfilter/ssl/server.key"
 
 
 if "--debug" in sys.argv:
@@ -140,6 +144,9 @@ class ShelfStore(web.session.ShelfStore):
 store = ShelfStore(shelve.open(thinfilter.config.SESSIONS_DIR + '/session.shelf'))
 ################################################################################
 
+# init database
+import thinfilter.db
+thinfilter.db.start()
 
 lg.debug("Loading modules", __name__)
 import thinfilter.modules
@@ -178,8 +185,9 @@ if __name__ == "__main__":
     sys.argv=[sys.argv[0], '9090']
     lg.debug("main() sys.argv=%s args=%s" %(sys.argv,args) )
     if "--start" in args:
-        #lg.debug("daemonize....")
-        #thinfilter.daemonize.start_server()
+        if not "--nodaemon" in args:
+            lg.debug("daemonize....")
+            thinfilter.daemonize.start_server()
         app.run()
     
     elif "--stop" in args:

@@ -25,6 +25,7 @@
 # common functions
 
 import time
+import os
 from subprocess import Popen, PIPE, STDOUT
 
 import thinfilter.logger as lg
@@ -56,6 +57,7 @@ def islogged(function):
 
     return new_function
 
+
 def layout(body='', title='ThinFilter', session=None ):
     render = web.template.render(thinfilter.config.BASE + 'templates/')
     def new_deco(function):
@@ -70,6 +72,40 @@ def layout(body='', title='ThinFilter', session=None ):
         return new_function
 
     return new_deco
+
+
+def isinrole(role='', session=None):
+    def new_deco(function):
+        def new_function(*args, **kwargs):
+            if web.config._session:
+                session=web.config._session
+            ROLES=web.config._session.get('roles','')
+            lg.debug("ROLES='%s' role='%s'"%(ROLES, role), __name__)
+            
+            if "admin" in ROLES:
+                return function(*args, **kwargs)
+                
+            if role == 'admin':
+                return function(*args, **kwargs)
+            elif role in ROLES:
+                return function(*args, **kwargs)
+            else:
+                raise web.seeother('/403?role=%s'%(role))
+            
+        return new_function
+    return new_deco
+
+#    
+#    def new_role(function):
+#        # search in roles
+#        try:
+#            roles=web.config._session.get('roles','')
+#            lg.debug("ROLES='%s' role='%s'"%(roles, role), __name__)
+#        except:
+#            pass
+#        return function(*args, **kwargs)
+
+#    return new_role
 
 ################################################################################
 # from /usr/lib/python2.5/BaseHTTPServer.py
@@ -170,17 +206,22 @@ class Base(dict):
 ################################################################################
 
 class Menu(web.Storage):
-    def __init__(self, path="/", name="unknow", submenus=[], order=50):
+    def __init__(self, path="/", name="unknow", submenus=[], order=50, role=''):
         self.name=name
         self.path=path
         # froms 0 to 100
         self.order=order
+        self.role=role
         self.submenus=[]
+        
+    def __repr__(self):
+        return '<Menu ' + dict.__repr__(self) + '>'
     
-    def appendSubmenu(self, path="/", name="unknow"):
+    def appendSubmenu(self, path="/", name="unknow", role=''):
         sub=Menu()
         sub.name=name
         sub.path=path
+        sub.role=role
         del(sub.submenus)
         self.submenus.append(sub)
 
@@ -196,11 +237,58 @@ def _sort_menu(menu1, menu2):
     else:
         return -1
 
+def showMenu(role, roles):
+    #lg.debug("role='%s' roles='%s'" %(role, roles))
+    if "admin" in roles:
+        return True
+    if role == '':
+        return True
+    elif role in roles:
+        return True
+        
+    lg.debug("NOT SHOW role='%s' roles='%s'" %(role, roles))
+    return False
+
 def get_menus():
     #lg.debug("get_menus() antes=%s" %thinfilter.config.menus, __name__)
     thinfilter.config.menus.sort(_sort_menu)
     #lg.debug("get_menus() despues=%s" %thinfilter.config.menus, __name__)
-    return thinfilter.config.menus
+    from pprint import pprint
+    roles=tuple()
+    if web.config._session:
+        roles=web.config._session.get('roles', '')
+    #print "user roles='%s'"%(roles)
+    newmenu=[]
+    # remove not allowed items
+    for menu in thinfilter.config.menus:
+        #print "\n"
+        #print "menu %s" %menu
+        
+        if len(menu.submenus) > 0:
+            newmenu.append(menu)
+            submenus=menu.submenus
+            menu.submenus=[]
+            for submenu in submenus:
+                #print "  submenu %s\n"%submenu
+                if showMenu(submenu.role, roles):
+                    newmenu[-1].submenus.append(submenu)
+            
+        else:
+            # no submenus
+            if showMenu(menu.role, roles):
+                newmenu.append(menu)
+        
+        #print "\n"
+    
+    new=[]
+    for i in range(len(newmenu)):
+        menu=newmenu[i]
+        if menu.path == '' and len(menu.submenus) < 1:
+            pass
+        else:
+            new.append(menu)
+    #return thinfilter.config.menus
+    return new
 
 ################################################################################
 
@@ -209,7 +297,8 @@ class Button(web.Storage):
         self.name=name
         self.path=path
         self.img=img
-
+    def __repr__(self):
+        return '<Button ' + dict.__repr__(self) + '>'
 
 def register_button(button):
     #lg.debug("register_button() button=%s"%button, __name__)
@@ -237,3 +326,4 @@ class ThinFilterException(Exception):
             "<ThinFilterException %s msg: %s>" %
             (self.errcode, self.errmsg)
             )
+

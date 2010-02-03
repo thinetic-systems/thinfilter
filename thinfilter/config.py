@@ -31,33 +31,35 @@ debug = False
 name = "thinfilter"
 timeout = 8
 uid=None
-
+devel=False
 
 DAEMON_LOG_FILE = "/var/log/thinfilter.log"
 DAEMON_PID_FILE = "/var/run/thinfilter.pid"
 DBNAME = "/var/lib/thinfilter/database.db"
 BASE="/usr/share/thinfilter/webpanel/"
-SESSIONS_DIR="/var/lib/thinfilter/sessions"
+VAR="/var/lib/thinfilter/"
+SESSIONS_DIR=VAR+"sessions"
 
-if os.path.isdir("/.dirs/dev/thinfilter"):
-    DAEMON_LOG_FILE = "/.dirs/dev/thinfilter/thinfilter.log"
-    DAEMON_PID_FILE = "/.dirs/dev/thinfilter/thinfilter.pid"
-    DBNAME = "/.dirs/dev/thinfilter/thinfilter.db"
+#if os.path.isdir("/.dirs/dev/thinfilter"):
+#    DAEMON_LOG_FILE = "/.dirs/dev/thinfilter/thinfilter.log"
+#    DAEMON_PID_FILE = "/.dirs/dev/thinfilter/thinfilter.pid"
+#    DBNAME = "/.dirs/dev/thinfilter/thinfilter.db"
 
 
 # set BASE in git sources dir to debug
-if os.path.abspath(os.curdir) == "/home/mario/thinetic/git/thinfilter":
-    BASE="/home/mario/thinetic/git/thinfilter/webpanel/"
-    DAEMON_LOG_FILE = "/home/mario/thinetic/git/thinfilter/thinfilter.log"
-    DAEMON_PID_FILE = "/home/mario/thinetic/git/thinfilter/thinfilter.pid"
-    DBNAME = "/home/mario/thinetic/git/thinfilter/thinfilter.db"
-    SESSIONS_DIR="/home/mario/thinetic/git/thinfilter/webpanel/sessions"
-elif os.path.abspath(os.curdir) == "/mnt/thinetic/git/thinfilter":
+#if os.path.abspath(os.curdir) == "/home/mario/thinetic/git/thinfilter":
+#    BASE="/home/mario/thinetic/git/thinfilter/webpanel/"
+#    DAEMON_LOG_FILE = "/home/mario/thinetic/git/thinfilter/thinfilter.log"
+#    DAEMON_PID_FILE = "/home/mario/thinetic/git/thinfilter/thinfilter.pid"
+#    DBNAME = "/home/mario/thinetic/git/thinfilter/thinfilter.db"
+#    SESSIONS_DIR="/home/mario/thinetic/git/thinfilter/webpanel/sessions"
+
+if os.path.abspath(os.curdir) == "/mnt/thinetic/git/thinfilter":
     BASE="/mnt/thinetic/git/thinfilter/webpanel/"
-    DAEMON_LOG_FILE = "/mnt/thinetic/git/thinfilter/thinfilter.log"
-    DAEMON_PID_FILE = "/mnt/thinetic/git/thinfilter/thinfilter.pid"
-    DBNAME = "/mnt/thinetic/git/thinfilter/thinfilter.db"
-    SESSIONS_DIR="/mnt/thinetic/git/thinfilter/webpanel/sessions"
+#    DAEMON_LOG_FILE = "/mnt/thinetic/git/thinfilter/thinfilter.log"
+#    DAEMON_PID_FILE = "/mnt/thinetic/git/thinfilter/thinfilter.pid"
+#    DBNAME = "/mnt/thinetic/git/thinfilter/thinfilter.db"
+#    SESSIONS_DIR="/mnt/thinetic/git/thinfilter/webpanel/sessions"
 
 
 
@@ -71,6 +73,7 @@ stop = False
 
 thread_verbose = False
 urls=[]
+roles=[]
 menus=[]
 buttons=[]
 

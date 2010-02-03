@@ -438,8 +438,9 @@ class Shares(thinfilter.common.Base):
         newdata['enabledelete']='1'
         return newdata
 
-class main(object):
+class samba(object):
     @thinfilter.common.islogged
+    @thinfilter.common.isinrole('samba')
     @thinfilter.common.layout(body='', title='Configuración de recursos compartidos')
     def GET(self, options=None):
         sobj=Shares()
@@ -465,6 +466,7 @@ class main(object):
 
 class shares(object):
     @thinfilter.common.islogged
+    @thinfilter.common.isinrole('samba/shares')
     @thinfilter.common.layout(body='', title='Nuevo recurso compartido')
     def GET(self, options=None):
         """
@@ -535,7 +537,7 @@ class shares(object):
 def init():
     if os.path.isfile('/usr/sbin/smbd'):
         lg.debug("samba::init()", __name__)
-        thinfilter.common.register_url('/shares',                          'thinfilter.modules.samba.main')
+        thinfilter.common.register_url('/shares',                          'thinfilter.modules.samba.samba')
         thinfilter.common.register_url('/shares/([a-zA-Z0-9-./]*)',  'thinfilter.modules.samba.shares')
         
         menu=thinfilter.common.Menu("", "Compartidos", order=70)

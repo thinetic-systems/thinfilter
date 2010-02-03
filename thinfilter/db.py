@@ -74,44 +74,13 @@ class Sqlite3(object):
 
 __sql__=Sqlite3(thinfilter.config.DBNAME)
 
-def create_db():
-    lg.debug("Creating empty table phones", __name__)
-    __sql__.execute("""CREATE TABLE phones (address VARCHAR(100), 
-                                            name VARCHAR(255), 
-                                            blue_type VARCHAR(100), 
-                                            services TEXT,  
-                                            status VARCHAR(50), 
-                                            model VARCHAR(255), 
-                                            date_search VARCHAR(50), 
-                                            date_send VARCHAR(50), 
-                                            PRIMARY KEY (address) )""")
-    
-    __sql__.execute("""CREATE TABLE config (sendfile TEXT, 
-                                            debug INTEGER, 
-                                            timeout INTEGER, 
-                                            concurrent INTEGER, 
-                                            stop INTEGER, 
-                                            file_path TEXT )""")
-    
-    __sql__.execute("""INSERT INTO config (sendfile, 
-                                           debug, 
-                                           timeout, 
-                                           concurrent, 
-                                           stop, 
-                                           file_path) 
-                                    VALUES ('thinetic.jpg', 
-                                             1, 
-                                             8, 
-                                             4, 
-                                             0, 
-                                             '/var/lib/thinfilter/files/')""")
-    return
+
 
 def connect():
     raise "connect() called and not needed"
 
-def query(_sql):
-    #lg.debug("query() sql=%s" %_sql, __name__)
+def query(_sql, silent=True):
+    if not silent: lg.debug("query() sql=%s" %_sql, __name__)
     if "SELECT" in _sql or "select" in _sql:
         _res=__sql__.select(_sql)
     else:
@@ -120,15 +89,50 @@ def query(_sql):
     if _res:
         for f in _res:
             result.append(f)
-    lg.debug("query() sql='%s' result='%s'" %(_sql, result) , __name__)
+    if not silent: lg.debug("query() sql='%s' result='%s'" %(_sql, result) , __name__)
     return result
+
+
+
+def create_db():
+    lg.debug("Creating tables...", __name__)
+    query("""CREATE TABLE rules (id INTEGER,
+                                 type TEXT, 
+                                 mode TEXT, 
+                                 text TEXT, 
+                                 description TEXT,
+                                 creator TEXT) """)
+    
+    query("""CREATE TABLE config (varname TEXT, 
+                                  value TEXT) """)
+    
+    query("""CREATE TABLE auth (username TEXT, 
+                                password TEXT,
+                                roles TEXT) """)
+    #
+    # auth table
+    #    role=admin all
+    #    role=firewall firewall
+    #    role=ports    firewall.ports
+    #    .........
+    #    role=x view only
+    #
+    # insert default data
+    query("INSERT into auth (username, password, roles) VALUES ('admin', 'admin', 'admin')")
+    query("INSERT into auth (username, password, roles) VALUES ('demo', 'demo', 'ports')")
+    return
+
+
 
 def close():
     global __sql__
     lg.debug("close()", __name__)
     __sql__.close()
 
-
+def start():
+    if not os.path.isfile(thinfilter.config.DBNAME):
+        # create database
+        create_db()
 
 if __name__=='__main__':
     #thinfilter.config.debug=True

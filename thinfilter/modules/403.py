@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 ##########################################################################
 # ThinFilter writen by MarioDebian <mario.izquierdo@thinetic.es>
@@ -23,32 +22,31 @@
 # 02111-1307, USA.
 ###########################################################################
 
-import sys
-import thinfilter.config
-if "debug" in sys.argv:
-    thinfilter.config.debug=True
-    thinfilter.config.daemon=False
-
-import thinfilter.statcreator
-import netifaces
+#
+# access denied stuff
+#
 
 
 
-if __name__ == "__main__":
-    update=True
-    graph=False
+import thinfilter.logger as lg
+import thinfilter.common
+
+
+import web
+render = web.template.render(thinfilter.config.BASE + 'templates/')
+
+class denied(object):
+    @thinfilter.common.layout(body='Permiso denegado', title='ThinFilter Login')
+    def GET(self):
+        formdata=web.input()
+        return render.denied(formdata.role)
+
+
+
+
+def init():
+    # nothing to check
+    lg.debug("403::init()", __name__)
     
-    if "graph" in sys.argv:
-        graph=True
-    
-    for net in netifaces.interfaces():
-        if net in thinfilter.config.HIDDEN_INTERFACES:
-            continue
-        app=thinfilter.statcreator.Net(iface=net)
-        if update: app.update()
-        if graph:  app.graph()
-    
-    
-    app=thinfilter.statcreator.CPU()
-    if update: app.update()
-    if graph:  app.graph()
+    thinfilter.common.register_url('/403',      'thinfilter.modules.403.denied')
+

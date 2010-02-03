@@ -1,0 +1,5 @@
+# /etc/cron.d/thinfilter-cron: crontab fragment for thinfilter-cron
+# This script update RDD files used by thinfilter
+
+# update RDD every 5 minutes
+*/5 *	* * *     root   [ -x /usr/sbin/thinfilter-cron ] && /usr/sbin/thinfilter-cron update >/dev/null 2>&1

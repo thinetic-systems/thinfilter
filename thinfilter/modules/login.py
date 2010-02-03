@@ -31,6 +31,7 @@ from hashlib import sha1
 import thinfilter.config
 import thinfilter.logger as lg
 import thinfilter.common
+import thinfilter.db
 import traceback
 
 # A simple user object that doesn't store passwords in plain text
@@ -43,8 +44,12 @@ class PasswordHash(object):
         """checks if the password is correct"""
         return self.saltedpw == sha1(password_ + self.salt).hexdigest()
 
-# FIXME: a secure application would never store passwords in plaintext in the source code
-users = {'admin' : PasswordHash('admin') }
+# users and password are stored in sqlite3 database
+users={}
+for _auth in thinfilter.db.query("SELECT username,password from auth"):
+    users[_auth[0]]=PasswordHash(_auth[1])
+
+
 
 
 import web
@@ -63,7 +68,6 @@ signin_form = web.form.Form(web.form.Textbox('username',
 
 
 class login(object):
-    
     @thinfilter.common.layout(body='No logueado', title='ThinFilter Login')
     def GET(self):
         username=web.config._session.get('user', '')
@@ -78,16 +82,18 @@ class login(object):
     def POST(self):
         my_signin = signin_form()
         if not my_signin.validates():
-            debug("not login valid")
+            lg.debug("not login valid")
             return web.seeother('/')
         else:
             web.config._session.user=my_signin['username'].value
+            web.config._session.roles=thinfilter.db.query("SELECT roles FROM auth WHERE username='%s'"%my_signin['username'].value)[0]
             lg.debug("login OK set session.user to %s" %my_signin['username'].value, __name__)
             return render.main(thinfilter.common.get_buttons())
 
 class logout(object):
     def GET(self):
         web.config._session.user=''
+        web.config._session.roles=''
         try:
             web.config._session.kill()
         except Exception, err:

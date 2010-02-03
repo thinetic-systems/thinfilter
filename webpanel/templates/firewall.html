@@ -25,17 +25,24 @@ function dosubmit(){
     $$('#NOPROXY_PORTS')[0].value='';
     $$('.noproxyport').each(function(i) {
         if( $$('.noproxyport')[i].checked ) {
-            $$('#NOPROXY_PORTS')[0].value+=" "+ $$('.noproxyport')[i].id;
+            $$('#NOPROXY_PORTS')[0].value+=$$('.noproxyport')[i].id.replace('ex_','') + ' ';
         }
     } );
-    console.log($$('#NOPROXY_PORTS')[0].value);
+    
     $$('#NOPROXY')[0].value='';
     var obj=$$("#exceptions")[0];
     for (var i = 0; i<obj.length; i++) {
-        $$('#NOPROXY')[0].value+=" "+ obj.options[i].value;
+        $$('#NOPROXY')[0].value+=obj.options[i].value + ' ';
     }
-    console.log($$('#NOPROXY')[0].value);
-    //$$('form')[0].submit();
+    
+    $$('#ALL_OPEN_PORTS')[0].value='';
+    $$('.allopenports').each(function(i) {
+        if( $$('.allopenports')[i].checked ) {
+            $$('#ALL_OPEN_PORTS')[0].value+=$$('.allopenports')[i].id.replace('op_','') + ' ';
+        }
+    } );
+    // submit
+    $$('form')[0].submit();
 }
 
 $$(document).ready(function() {
@@ -47,11 +54,19 @@ $$(document).ready(function() {
             obj.options[obj.options.length] = new Option(objvalues[i], objvalues[i]);
         }
     }
-    var ports=$$("#NOPROXY_PORTS")[0].value.split(' ');
-    for (var i = 0; i< ports.length ; i++) {
+    var eports=$$("#NOPROXY_PORTS")[0].value.split(' ');
+    for (var i = 0; i< eports.length ; i++) {
         $$('.noproxyport').each(function(z) {
-            if( $$('.noproxyport')[z].id == ports[i] ) {
+            if( $$('.noproxyport')[z].id == "ex_" + eports[i] ) {
                 $$('.noproxyport')[z].checked=true;
+            }
+        } );
+    }
+    var oports=$$("#ALL_OPEN_PORTS")[0].value.split(' ');
+    for (var i = 0; i< oports.length ; i++) {
+        $$('.allopenports').each(function(z) {
+            if( $$('.allopenports')[z].id == "op_" + oports[i] ) {
+                $$('.allopenports')[z].checked=true;
             }
         } );
     }
@@ -66,13 +81,13 @@ $$(document).ready(function() {
     <tr>
         <td>Activar VPN</td>
         <td>
-            <input type="checkbox" name="vpn" id="vpn" value="1" $(data['form']['VPN_ENABLE'])>
+            <input type="checkbox" name="VPN_ENABLE" id="VPN_ENABLE" value="1" $(data['form']['VPN_ENABLE'])>
         </td>
     </tr>
     
     <tr>
         <td>Navegación sólo web <br/><small>En este modo se bloquea todo el tráfico excepto HTTP</small></td>
-        <td><input type="checkbox" name="web" id="web" value="1" $(data['form']['ONLY_WEB'])></td>
+        <td><input type="checkbox" name="ONLY_WEB" id="ONLY_WEB" value="1" $(data['form']['ONLY_WEB'])></td>
     </tr>
 
     <tr>
@@ -102,7 +117,7 @@ $$(document).ready(function() {
         <td>
         <input type="hidden" id="NOPROXY_PORTS" name="NOPROXY_PORTS" value="$(data['NOPROXY_PORTS'])">
         $for u in data['form']['ports']:
-            <input type="checkbox" class="noproxyport" name="$(u)" id="$(u)" value="1"> 
+            <input type="checkbox" class="noproxyport" name="ex_$(u)" id="ex_$(u)" value="1"> 
             <acronym title="Puertos: $(data['form']['ports'][u])">$(u)</acronym>
             <br/>
         </td>
@@ -116,8 +131,9 @@ $$(document).ready(function() {
     <tr>
         <td>Puertos abiertos para todos</td>
         <td>
+        <input type="hidden" id="ALL_OPEN_PORTS" name="ALL_OPEN_PORTS" value="$(data['ALL_OPEN_PORTS'])">
         $for u in data['form']['ports']:
-            <input type="checkbox" class="allopenports" name="$(u)" id="$(u)" value="1">
+            <input type="checkbox" class="allopenports" name="op_$(u)" id="op_$(u)" value="1">
             <acronym title="Puertos: $(data['form']['ports'][u])">$(u)</acronym>
             <br/>
         </td>

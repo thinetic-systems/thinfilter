@@ -17,11 +17,7 @@
 
 DESC="ThinFilter"
 NAME=thinfilter
-
-
 DAEMON=/usr/sbin/$NAME
-
-
 SCRIPTNAME=/etc/init.d/thinfilter
 
 

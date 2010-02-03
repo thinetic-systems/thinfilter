@@ -8,7 +8,7 @@
 # load configuration
 [ -e /etc/thinfilter/firewall.conf ] && . /etc/thinfilter/firewall.conf
 
-[ -e ./firewall/firewall.conf ] && . ./firewall/firewall.conf
+#[ -e ./firewall/firewall.conf ] && . ./firewall/firewall.conf
 
 ########################################################################################################################
 get_port_number() {
@@ -19,6 +19,7 @@ get_port_number() {
     fi
   done
 }
+
 
 if [ "$SQUID_SERVER" = "" ]; then
   SQUID_SERVER=127.0.0.1
@@ -80,11 +81,19 @@ $IPTABLES -A OUTPUT -o $LAN -j ACCEPT
 
 
 for data in $PORTS; do
-  IFACE=$(echo $data  | awk -F":" '{print $1}')
-  PROTO=$(echo $data  | awk -F":" '{print $2}')
-  PORT=$(echo $data   | awk -F":" '{print $3}')
-  $IPTABLES -A INPUT -i $IFACE -j ACCEPT -p $PROTO --dport $PORT
-  $IPTABLES -A OUTPUT -o $IFACE -j ACCEPT -p $PROTO --dport $PORT
+  pnumbers=$(get_port_number $data)
+  for num in $pnumbers; do
+    $IPTABLES -A INPUT  -j ACCEPT -p tcp --dport $num
+    $IPTABLES -A OUTPUT -j ACCEPT -p udp --dport $num
+  done
+  
+  #IFACE=$(echo $data  | awk -F":" '{print $1}')
+  #PROTO=$(echo $data  | awk -F":" '{print $2}')
+  #PORT=$(echo $data   | awk -F":" '{print $3}')
+  #echo "iface=$IFACE proto=$PROTO port=$PORT"
+  #$IPTABLES -A INPUT -i $IFACE -j ACCEPT -p $PROTO --dport $PORT
+  #$IPTABLES -A OUTPUT -o $IFACE -j ACCEPT -p $PROTO --dport $PORT
+  
 done
 
 

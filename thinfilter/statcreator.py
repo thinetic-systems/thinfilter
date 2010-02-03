@@ -35,7 +35,7 @@ import netifaces
 
 
 import thinfilter.config
-GRAPH_PATH=os.path.join( thinfilter.config.BASE, "graphs")
+GRAPH_PATH=os.path.join( thinfilter.config.VAR, "graphs")
 
 import thinfilter.logger as log
 
@@ -43,6 +43,8 @@ import thinfilter.logger as log
 class CPU(object):
     def __init__(self):
         self.fname="%s/cpu"%(GRAPH_PATH)
+        if not os.path.isfile(self.fname):
+            self.create()
 
     def create(self):
         rrdtool.create("%s.rrd"%(self.fname),
@@ -133,81 +135,14 @@ class CPU(object):
                       "GPRINT:cpu:AVERAGE:Uso de CPU media\: %lf%%",
                       "COMMENT:	\\j")
         log.info("updated %s.png"%self.fname, __name__)
-                    #### old
-#                      "CDEF:total=user,system,idle,+,+",
-#                      "CDEF:userpct=100,user,total,/,*",
-#                      "CDEF:systempct=100,system,total,/,*",
-#                      "CDEF:idlepct=100,idle,total,/,*",
-#                      "AREA:userpct#0000FF:user cpu usage\\j",
-#                      "STACK:systempct#FF0000:system cpu usage\\j",
-#                      "STACK:idlepct#00FF00:idle cpu usage\\j",
-#                      "GPRINT:userpct:MAX:maximal user cpu\\:%3.2lf%%",
-#                      "GPRINT:userpct:AVERAGE:average user cpu\\:%3.2lf%%",
-#                      "GPRINT:userpct:LAST:current user cpu\\:%3.2lf%%\\j",
-#                      "GPRINT:systempct:MAX:maximal system cpu\\:%3.2lf%%",
-#                      "GPRINT:systempct:AVERAGE:average system cpu\\:%3.2lf%%",
-#                      "GPRINT:systempct:LAST:current system cpu\\:%3.2lf%%\\j",
-#                      "GPRINT:idlepct:MAX:maximal idle cpu\\:%3.2lf%%",
-#                      "GPRINT:idlepct:AVERAGE:average idle cpu\\:%3.2lf%%",
-#                      "GPRINT:idlepct:LAST:current idle cpu\\:%3.2lf%%\\j"
-#                    )
-#                    /usr/bin/rrdtool graph /var/www/localhost/htdocs/stats/load.png \
-#                    -Y -u 1.1 -l 0 -L 5 -v "Load" -w 700 -h 300 -t "Load & CPU stats - `/bin/date`" \
-#                    -c ARROW\#000000 -x MINUTE:30:MINUTE:30:HOUR:1:0:%H \
-#                    DEF:load1=/usr/share/rrdtool/load.rrd:load1:AVERAGE \
-#                    DEF:load5=/usr/share/rrdtool/load.rrd:load5:AVERAGE \
-#                    DEF:load15=/usr/share/rrdtool/load.rrd:load15:AVERAGE \
-#                    DEF:user=/usr/share/rrdtool/load.rrd:cpuuser:AVERAGE \
-#                    DEF:nice=/usr/share/rrdtool/load.rrd:cpunice:AVERAGE \
-#                    DEF:sys=/usr/share/rrdtool/load.rrd:cpusystem:AVERAGE \
-#                    CDEF:cpu=user,nice,sys,+,+ \
-#                    CDEF:reluser=load15,user,100,/,* \
-#                    CDEF:relnice=load15,nice,100,/,* \
-#                    CDEF:relsys=load15,sys,100,/,* \
-#                    CDEF:idle=load15,100,cpu,-,100,/,* \
-#                    HRULE:1\#000000 \
-#                    COMMENT:"	" \
-#                    AREA:reluser\#FF0000:"CPU user" \
-#                    STACK:relnice\#00AAFF:"CPU nice" \
-#                    STACK:relsys\#FFFF00:"CPU system" \
-#                    STACK:idle\#00FF00:"CPU idle" \
-#                    COMMENT:"	\j" \
-#                    COMMENT:"	" \
-#                    LINE1:load1\#000FFF:"Load average 1 min" \
-#                    LINE2:load5\#000888:"Load average 5 min" \
-#                    LINE3:load15\#000000:"Load average 15 min" \
-#                    COMMENT:"	\j" \
-#                    COMMENT:"\j" \
-#                    COMMENT:"	" \
-#                    GPRINT:load15:MIN:"Load 15 min minimum\: %lf" \
-#                    GPRINT:load15:MAX:"Load 15 min maximum\: %lf" \
-#                    GPRINT:load15:AVERAGE:"Load 15 min average\: %lf" \
-#                    COMMENT:"	\j" \
-#                    COMMENT:"	" \
-#                    GPRINT:cpu:MIN:"CPU usage minimum\: %lf%%" \
-#                    GPRINT:cpu:MAX:"CPU usage maximum\: %lf%%" \
-#                    GPRINT:cpu:AVERAGE:"CPU usage average\: %lf%%" \
-#                    COMMENT:"	\j";
-#                    #
-#                    /usr/bin/rrdtool graph /var/www/localhost/htdocs/stats/cpu.png \
-#                    -Y -r -u 100 -l 0 -L 5 -v "CPU usage" -w 700 -h 300 -t "Bifroest CPU stats - `/bin/date`" \
-#                    -c ARROW\#000000 -x MINUTE:30:MINUTE:30:HOUR:1:0:%H \
-#                    DEF:user=/usr/share/rrdtool/load.rrd:cpuuser:AVERAGE \
-#                    DEF:nice=/usr/share/rrdtool/load.rrd:cpunice:AVERAGE \
-#                    DEF:sys=/usr/share/rrdtool/load.rrd:cpusystem:AVERAGE \
-#                    CDEF:idle=100,user,nice,sys,+,+,- \
-#                    COMMENT:"	" \
-#                    AREA:user\#FF0000:"CPU user" \
-#                    STACK:nice\#000099:"CPU nice" \
-#                    STACK:sys\#FFFF00:"CPU system" \
-#                    STACK:idle\#00FF00:"CPU idle" \
-#                    COMMENT:"	\j";;
 
 class Net():
     def __init__(self, iface="eth0"):
         self.iface=iface
         secure_iface=iface.replace(':', '_')
         self.fname="%s/%s"%(GRAPH_PATH, secure_iface)
+        if not os.path.isfile(self.fname):
+            self.create()
         
     def create(self):
         rrdtool.create("%s.rrd"%self.fname,
@@ -273,14 +208,6 @@ class Net():
                     "GPRINT:out:LAST:Actual\: %3.2lf %SB/s",
                     "HRULE:0#000000")
         log.info( "updated %s.png"%self.fname, __name__ )
-#                    "LINE1:outgoing#0000FF:subida en bytes por seg\\j",
-#                    "GPRINT:incoming:MAX:max in \\:%10.2lf %sBps",
-#                    "GPRINT:incoming:AVERAGE:med in \\:%10.2lf %sBps",
-#                    "GPRINT:incoming:LAST: cur in\\:%10.2lf %sBps\\j",
-#                    "GPRINT:outgoing:MAX:max out\\:%10.2lf %sBps",
-#                    "GPRINT:outgoing:AVERAGE: med out\\:%10.2lf %sBps",
-#                    "GPRINT:outgoing:LAST: cur out\\:%10.2lf %sBps\\j"
-#                    )
 
 
 

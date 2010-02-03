@@ -148,6 +148,7 @@ class DISK(object):
 
 class livestats:
     @thinfilter.common.islogged
+    @thinfilter.common.isinrole('livestats.livestats')
     @thinfilter.common.layout(body='', title='Estadísticas de red en vivo')
     def GET(self):
         ifaces=[]
@@ -165,7 +166,7 @@ def init():
     thinfilter.common.register_url('/livestats', 'thinfilter.modules.livestats.livestats')
     thinfilter.common.register_url('/livestats/(.+?)(?:(\.[^.]*$)|$)$', 'thinfilter.modules.livestats.stats_svg')
 
-    menu=thinfilter.common.Menu("/livestats", "Estado", order=15)
+    menu=thinfilter.common.Menu("/livestats", "Estado", order=15, role='livestats.livestats')
     thinfilter.common.register_menu(menu)
 
 if __name__ == "__main__":

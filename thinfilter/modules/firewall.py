@@ -31,9 +31,6 @@ import sys
 
 import glob
 
-# delete me
-sys.path.append('/home/mario/thinetic/git/thinfilter')
-
 
 import thinfilter.logger as lg
 import thinfilter.config
@@ -45,11 +42,13 @@ render = web.template.render(thinfilter.config.BASE + 'templates/')
 
 
 FW_CONF="/etc/thinfilter/firewall.conf"
-FW_SCRIPT="/usr/sbin/fw.proxy"
+FW_SCRIPT="/usr/sbin/thinfilter.fw"
 
 #delete this
-FW_CONF="firewall/firewall.conf"
-FW_SCRIPT="firewall/fw.proxy"
+if thinfilter.config.devel:
+    lg.debug("firewall devel active", __name__ )
+    FW_CONF="firewall/firewall.conf"
+    FW_SCRIPT="firewall/thinfilter.fw"
 
 VARS=[
       'VPN_ENABLE',
@@ -63,12 +62,12 @@ VARS=[
       'KNOW_PORTS',
       ]
 
-FW_PORTS={
-        'https':[443],
-        'ftp':['ftp'],
-        'ssh':[22],
-        'correo':[25,465,110,995,143,993],
-        }
+#FW_PORTS={
+#        'https':[443],
+#        'ftp':['ftp'],
+#        'ssh':[22],
+#        'correo':[25,465,110,995,143,993],
+#        }
 
 class FireWall(thinfilter.common.Base):
     def __init__(self):
@@ -84,6 +83,8 @@ class FireWall(thinfilter.common.Base):
                        'NTP_ENABLE':'',
                        'ports':{},
                         }
+        
+        self.boolvars=['VPN_ENABLE', 'ONLY_WEB', 'ICMP_ENABLE', 'NTP_ENABLE']
         
         for line in data:
             l=line.split('=')[0]
@@ -135,6 +136,7 @@ class FireWall(thinfilter.common.Base):
 
 class firewall(object):
     @thinfilter.common.islogged
+    @thinfilter.common.isinrole('firewall.firewall')
     @thinfilter.common.layout(body='', title='Configuración del Cortafuegos')
     def GET(self, options=None):
         fobj=FireWall()
@@ -148,18 +150,25 @@ class firewall(object):
         data=fobj.vars
         formdata=web.input()
         lg.debug("firewall()::formdata=%s"%formdata, __name__)
-        #for param in data:
-            #lg.debug("firewall::POST() param=%s old=%s"%(param, data[param]), __name__ )
-            #lg.debug("firewall::POST() param=%s new=%s"%(param, getattr(formdata, param) ), __name__ )
-            #data[param]=getattr(formdata, param)
-        #lg.debug("firewall::POST() data=%s"%data, __name__)
-        #fobj.save(data)
-        #fobj.restart()
+        for param in data:
+            if formdata.has_key(param):
+                lg.debug("firewall::POST() param='%s' old='%s' new='%s'"%(param, data[param], formdata[param].strip()), __name__ )
+                data[param]=formdata[param].strip()
+            else:
+                if param in fobj.boolvars:
+                    data[param]='0'
+                else:
+                    lg.debug("firewall::POST() NOT FOUND param='%s' old='%s'"%(param, data[param]), __name__ )
+        from pprint import pprint
+        pprint(data)
+        fobj.save(data)
+        fobj.restart()
         return web.seeother('/firewall')
 
 
 class ports(object):
     @thinfilter.common.islogged
+    @thinfilter.common.isinrole('firewall.ports')
     @thinfilter.common.layout(body='', title='Configuración de puertos')
     def GET(self, options=None):
         fobj=FireWall()
@@ -197,8 +206,8 @@ def init():
     thinfilter.common.register_url('/firewall/ports', 'thinfilter.modules.firewall.ports')
     
     menu=thinfilter.common.Menu("", "Cortafuegos", order=30)
-    menu.appendSubmenu("/firewall", "Configuración")
-    menu.appendSubmenu("/firewall/ports", "Puertos conocidos")
+    menu.appendSubmenu("/firewall", "Configuración", role='firewall.firewall')
+    menu.appendSubmenu("/firewall/ports", "Puertos conocidos", role='firewall.firewall')
     thinfilter.common.register_menu(menu)
 
 if __name__ == "__main__":

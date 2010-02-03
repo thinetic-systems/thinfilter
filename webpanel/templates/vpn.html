@@ -1,11 +1,32 @@
-$def with (data, action='Guardar')
+$def with (data, running, conf, action='Guardar')
+
+
+<script>
+function showPopup(){
+  $$('#hideshow')[0].style.visibility = 'visible';
+}
+
+function vpn_reset(){
+// preguntar si se borra todo
+var answer = confirm ("Se borrarán todos los certificados de servidor y usuario.\n¿Está seguro?")
+if (answer) {
+  showPopup();
+  location.href='/vpn/reset';
+  }
+}
+
+function vpn_restart(){
+showPopup();
+location.href='/vpn/restart';
+}
+</script>
 
 
 
 <h1 class="clear">Configuración de OpenVPN</h1>
 
 
-<form method="post" action="/vpn">
+<form method="post" action="/vpn" onsubmit="javascript:showPopup();">
 <table id="settings">
 $for v in data:
     <tr>
@@ -28,7 +49,12 @@ $for v in data:
             Tamaño del certificado
         </td>
         <td>
+        $if running:
+            $(data[v])
+        $else:
             <input class="$(v)" type="text" name="$(v)" id="$(v)" value="$(data[v])">
+        </td>
+        <td>
         $if "EXPIRE" in v:
             <small>(3650 = 10años)</small>
         $elif v == "KEY_SIZE":
@@ -41,8 +67,50 @@ $for v in data:
     
     <tr><td colspan="3"><hr></td></tr>
 
+$for v in conf:
+    <tr>
+        <td>
+        $if v == "server":
+            Dirección IP virtual
+        </td>
+        <td>
+        $if running:
+            $(conf[v])
+        $else:
+            <input class="$(v)" type="text" name="$(v)" id="$(v)" value="$(conf[v])">
+        </td>
+        <td>
+        $if "server" in v:
+            <small>(por defecto 10.8.0.0)</small>
+        </td>
+    </tr>
 
-<tr><td colspan="2">&nbsp;</td><td><input type="submit" id="$action" value="$action"></td></tr>
+<tr><td colspan="3"><hr></td></tr>
+
+
+<tr>
+    <td>&nbsp;</td>
+    <td>
+        <input type="button" id="reset" value="Resetear" onclick="javascript:vpn_reset();">
+        <input type="button" id="restart" value="Reiniciar" onclick="javascript:vpn_restart();">
+    </td>
+    <td>
+        <input type="submit" id="$action" value="$action">
+    </td>
+</tr>
 </table>
 </form>
+
+
+<div id="hideshow" style="visibility:hidden;">
+	<div class="popup_block">
+		<div class="popup">
+			<h3>Aplicando cambios...</h3>
+			<img src="/data/loading.gif">
+		</div>
+	</div>
+</div>
+
+
+
 

@@ -124,6 +124,7 @@ class Interfaces(object):
 
 class network(object):
     @thinfilter.common.islogged
+    @thinfilter.common.isinrole('network.network')
     @thinfilter.common.layout(body='', title='Configuración Red')
     def GET(self, options=None):
         lg.debug("network::GET() options=%s" %options, __name__)
@@ -222,6 +223,7 @@ class DnsMasq(object):
         
 class dhcp(object):
     @thinfilter.common.islogged
+    @thinfilter.common.isinrole('network.dhcp')
     @thinfilter.common.layout(body='', title='Configuración DHCP')
     def GET(self, options=None):
         lg.debug("dhcp::GET() options=%s" %options, __name__)
@@ -309,6 +311,7 @@ class extraStats(object):
 
 class netstats(object):
     @thinfilter.common.islogged
+    @thinfilter.common.isinrole('network.netstats')
     @thinfilter.common.layout(body='', title='Estadísticas de red')
     def GET(self, options=None):
         data=netStats().get()
@@ -368,9 +371,9 @@ def init():
     </li>
     """
     menu=thinfilter.common.Menu("", "Red", order=10)
-    menu.appendSubmenu("/network", "Configuración")
-    menu.appendSubmenu("/network/dhcp", "DHCP")
-    menu.appendSubmenu("/network/stats", "Estadísticas")
+    menu.appendSubmenu("/network", "Configuración", role='network.network')
+    menu.appendSubmenu("/network/dhcp", "DHCP", role='network.dhcp')
+    menu.appendSubmenu("/network/stats", "Estadísticas", role='network.netstats')
     thinfilter.common.register_menu(menu)
     
     """

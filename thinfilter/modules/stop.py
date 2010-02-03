@@ -61,24 +61,10 @@ class stop(object):
         #lg.debug("firewall::GET() firewall=%s" %firewall_vars, __name__)
         return render.stop(formdata, 'Guardar')
 
-#    @thinfilter.common.islogged
-#    def POST(self):
-#        fobj=FireWall()
-#        data=fobj.vars
-#        formdata=web.input()
-#        #lg.debug("firewall()::formdata=%s"%formdata, __name__)
-#        for param in data:
-#            #lg.debug("firewall::POST() param=%s old=%s"%(param, data[param]) )
-#            #lg.debug("firewall::POST() param=%s new=%s"%(param, getattr(formdata, param) ) )
-#            data[param]=getattr(formdata, param)
-#        #lg.debug("firewall::POST() data=%s"%data)
-#        fobj.save(data)
-#        fobj.restart()
-#        return web.seeother('/firewall')
-
 
 class admin(object):
     @thinfilter.common.islogged
+    @thinfilter.common.isinrole('stop.admin')
     @thinfilter.common.layout(body='', title='Configuración de las pantallas de bloqueo')
     def GET(self, options=None):
         pass
@@ -100,7 +86,7 @@ def init():
     
     menu=thinfilter.common.Menu("", "Pantallas", order=60)
     menu.appendSubmenu("/stop?url=http://url.de.ejemplo/index.html", "Ver pantalla")
-    menu.appendSubmenu("/stop/admin", "Configurar pantalla")
+    menu.appendSubmenu("/stop/admin", "Configurar pantalla", role='stop.admin')
     thinfilter.common.register_menu(menu)
 
 if __name__ == "__main__":

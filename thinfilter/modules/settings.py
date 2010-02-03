@@ -35,6 +35,7 @@ render = web.template.render(thinfilter.config.BASE + 'templates/')
 
 class settings(object):
     @thinfilter.common.islogged
+    @thinfilter.common.isinrole('settings')
     @thinfilter.common.layout(body='', title='Configuración')
     def GET(self, options=None):
         

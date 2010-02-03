@@ -2,60 +2,6 @@ $def with (data, action='Guardar')
 
 
 <script type="text/javascript">
-<!--var baseip='10.0.0.';-->
-<!--function addIP(elem){-->
-<!--    if(! $$("#"+elem)[0]) return;-->
-<!--    var obj=$$("#"+elem)[0];-->
-<!--    var ip = prompt('Completa la IP:', baseip); -->
-<!--    obj.options[obj.options.length] = new Option(ip, ip);-->
-<!--}-->
-
-<!--function delete_selected(elem){-->
-<!--    if(! $$("#"+elem)[0]) return;-->
-<!--    var obj=$$("#"+elem)[0];-->
-<!--    for (var i = obj.length - 1; i>=0; i--) {-->
-<!--        if (obj.options[i].selected) {-->
-<!--          obj.remove(i);-->
-<!--        }-->
-<!--    }-->
-<!--}-->
-
-<!--function dosubmit(){-->
-<!--    $$('#NOPROXY_PORTS')[0].value='';-->
-<!--    $$('.noproxyport').each(function(i) {-->
-<!--        if( $$('.noproxyport')[i].checked ) {-->
-<!--            $$('#NOPROXY_PORTS')[0].value+=" "+ $$('.noproxyport')[i].id;-->
-<!--        }-->
-<!--    } );-->
-<!--    console.log($$('#NOPROXY_PORTS')[0].value);-->
-<!--    $$('#NOPROXY')[0].value='';-->
-<!--    var obj=$$("#exceptions")[0];-->
-<!--    for (var i = 0; i<obj.length; i++) {-->
-<!--        $$('#NOPROXY')[0].value+=" "+ obj.options[i].value;-->
-<!--    }-->
-<!--    console.log($$('#NOPROXY')[0].value);-->
-<!--    //$$('form')[0].submit();-->
-<!--}-->
-
-<!--$$(document).ready(function() {-->
-<!--   if(! $$("#NOPROXY")[0]) return;-->
-<!--   var obj=$$("#exceptions")[0];-->
-<!--   var objvalues=$$("#NOPROXY")[0].value.split(' ');-->
-<!--   for (var i = 0; i< objvalues.length ; i++) {-->
-<!--        if (objvalues[i] != '') {-->
-<!--            obj.options[obj.options.length] = new Option(objvalues[i], objvalues[i]);-->
-<!--        }-->
-<!--    }-->
-<!--    var ports=$$("#NOPROXY_PORTS")[0].value.split(' ');-->
-<!--    for (var i = 0; i< ports.length ; i++) {-->
-<!--        $$('.noproxyport').each(function(z) {-->
-<!--            if( $$('.noproxyport')[z].id == ports[i] ) {-->
-<!--                $$('.noproxyport')[z].checked=true;-->
-<!--            }-->
-<!--        } );-->
-<!--    }-->
-<!-- });-->
-
 function dodelete(elem){
   var d = $$('#ports')[0];
   var portdiv = $$('#'+elem)[0];
@@ -118,7 +64,7 @@ function addport(){
         <div id='ports' name='ports'>
         $for u in data['form']['ports']:
             <div id='$(u)' name='$(u)'>
-                <input type="text" class="portname" name="name_$(u)" id="name_$(u)" value="$(u)" size='10'>
+                <input type="text" class="portname" name="name_$(u)" id="name_$(u)" value="$(u)" size='10' readonly="true">
                 <input type="text" class="portnumbers" name="numbers_$(u)" id="numbers_$(u)" value="$(data['form']['ports'][u])" size='20'>
                 <input type="button" value="borrar" onClick="javascript:dodelete('$(u)');">
             </div>
