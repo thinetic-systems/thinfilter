@@ -57,6 +57,9 @@ SMB_MINUSER=2001
 SMB_MAXUSER=3000
 SMBCONF="/etc/samba/smb.conf"
 
+if thinfilter.config.devel:
+    SMBCONF="./smb.conf"
+
 
 SMB_VARS=[
         'global|workgroup',
@@ -440,7 +443,7 @@ class Shares(thinfilter.common.Base):
 
 class samba(object):
     @thinfilter.common.islogged
-    @thinfilter.common.isinrole('samba')
+    @thinfilter.common.isinrole('samba.samba')
     @thinfilter.common.layout(body='', title='Configuración de recursos compartidos')
     def GET(self, options=None):
         sobj=Shares()
@@ -452,6 +455,7 @@ class samba(object):
         return render.shares(samba_vars, 'Guardar grupo de trabajo')
 
     @thinfilter.common.islogged
+    @thinfilter.common.isinrole('samba.samba')
     def POST(self):
         sobj=Shares()
         formdata=web.input()
@@ -466,7 +470,7 @@ class samba(object):
 
 class shares(object):
     @thinfilter.common.islogged
-    @thinfilter.common.isinrole('samba/shares')
+    @thinfilter.common.isinrole('samba.shares')
     @thinfilter.common.layout(body='', title='Nuevo recurso compartido')
     def GET(self, options=None):
         """
@@ -496,6 +500,7 @@ class shares(object):
             return web.seeother('/shares')
 
     @thinfilter.common.islogged
+    @thinfilter.common.isinrole('samba.shares')
     def POST(self, options=None):
         """
         share/sharename
@@ -535,16 +540,19 @@ class shares(object):
 
 
 def init():
-    if os.path.isfile('/usr/sbin/smbd'):
+    if thinfilter.config.devel or os.path.isfile('/usr/sbin/smbd'):
         lg.debug("samba::init()", __name__)
         thinfilter.common.register_url('/shares',                          'thinfilter.modules.samba.samba')
         thinfilter.common.register_url('/shares/([a-zA-Z0-9-./]*)',  'thinfilter.modules.samba.shares')
         
         menu=thinfilter.common.Menu("", "Compartidos", order=70)
-        menu.appendSubmenu("/shares", "Configuración")
-        menu.appendSubmenu("/shares/share/new", "Nuevo recurso")
-        menu.appendSubmenu("/shares/user/new", "Nuevo usuario")
+        menu.appendSubmenu("/shares", "Configuración", role='samba.samba')
+        menu.appendSubmenu("/shares/share/new", "Nuevo recurso", role='samba.shares')
+        menu.appendSubmenu("/shares/user/new", "Nuevo usuario", role='samba.shares')
         thinfilter.common.register_menu(menu)
+        
+        thinfilter.common.register_role_desc('samba.samba', "Ver recursos compartidos")
+        thinfilter.common.register_role_desc('samba.shares', "Modificar recursos compartidos")
         
         # create shares path
         if not os.path.isdir(SMB_PATH):

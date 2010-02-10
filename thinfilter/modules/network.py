@@ -132,6 +132,7 @@ class network(object):
         return render.settings_net(ifaces, action='Guardar')
 
     @thinfilter.common.islogged
+    @thinfilter.common.isinrole('network.network')
     def POST(self):
         ifaces=Interfaces().get()
         formdata=web.input()
@@ -232,6 +233,7 @@ class dhcp(object):
         return render.settings_dhcp(data, action='Guardar')
 
     @thinfilter.common.islogged
+    @thinfilter.common.isinrole('network.dhcp')
     def POST(self):
         dnsmasq=DnsMasq()
         data=dnsmasq.get()
@@ -375,6 +377,10 @@ def init():
     menu.appendSubmenu("/network/dhcp", "DHCP", role='network.dhcp')
     menu.appendSubmenu("/network/stats", "Estadísticas", role='network.netstats')
     thinfilter.common.register_menu(menu)
+    
+    thinfilter.common.register_role_desc('network.network', "Configurar parámetros de red")
+    thinfilter.common.register_role_desc('network.dhcp', "Configurar servicio DHCP")
+    thinfilter.common.register_role_desc('network.netstats', "Ver tráfico de red")
     
     """
     <a class="qbutton" href="/network"><img src="/data/network.png" alt="Red"><br/>Configuración de Red</a>

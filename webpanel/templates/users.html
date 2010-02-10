@@ -1,0 +1,28 @@
+$def with (data, action='Guardar')
+
+
+
+<h1 class="clear"><img src="/data/users.png" alt="Usuarios"> Lista de usuarios</h1>
+
+
+
+<table id="settings">
+    <tr>
+        <td><b>Usuario</b></td>
+        <td><b>Permisos</b></td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr><td colspan="3"><hr></td></tr>
+$for v in data:
+    <tr>
+        <td>$v.username</td>
+        <td>
+            $for role in v.rolesobj:
+                $role['desc']<br/>
+        </td>
+        <td><a href="/users/edit?u=$v.username">editar</a></td>
+    </tr>
+    <tr><td colspan="3"><hr></td></tr>
+
+</table>
+

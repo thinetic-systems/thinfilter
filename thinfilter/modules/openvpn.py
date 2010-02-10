@@ -415,6 +415,10 @@ def init():
     menu.appendSubmenu("/vpn/users", "Usuarios", role='openvpn.users')
     menu.appendSubmenu("/vpn/remote", "Tunel", role='openvpn.restart')
     thinfilter.common.register_menu(menu)
+    
+    thinfilter.common.register_role_desc('openvpn.vpn', "Configurar servidor VPN")
+    thinfilter.common.register_role_desc('openvpn.users', "Administrar usuarios VPN")
+    thinfilter.common.register_role_desc('openvpn.restart', "Reiniciar servidor VPN")
 
 
 if __name__ == "__main__":

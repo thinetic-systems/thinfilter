@@ -24,6 +24,7 @@
 
 import os
 import sys
+import re
 import thinfilter.logger as lg
 import thinfilter.config
 import time
@@ -92,17 +93,37 @@ def query(_sql, silent=True):
     if not silent: lg.debug("query() sql='%s' result='%s'" %(_sql, result) , __name__)
     return result
 
-
+def clean(value):
+    sanitized =re.sub(r'[^A-Za-z0-9_. ñÑáéíóúÁÉÍÓÚ$€]+|^\.|\.$|^ | $|^$', '', value)
+    if value != sanitized:
+        lg.warning("UNSANITIZED data=#%s#"%value, __name__)
+    return sanitized
 
 def create_db():
     lg.debug("Creating tables...", __name__)
-    query("""CREATE TABLE rules (id INTEGER,
+    query("""CREATE TABLE filter (id INTEGER,
                                  type TEXT, 
                                  mode TEXT, 
                                  text TEXT, 
                                  description TEXT,
+                                 category INT,
                                  creator TEXT) """)
+    # type url|domain|regexp
+    # mode white|black
+    # text the filter
+    # description additional description of filter
+    # category
+    #
+    query("INSERT INTO filter VALUES (1, 'domain', 'black', 'tuenti.es', '', 1, 'thinfilter')")
     
+    
+    query("""CREATE TABLE catfilter (id INTEGER,
+                                     description TEXT,
+                                     text TEXT,
+                                     creator TEXT) """)
+    query("INSERT INTO catfilter VALUES (1, 'redes sociales', 'Cuando te conectes a Internet siempre has de tener claro cuando hacerlo para el estudio o el trabajo, y cuando para el ocio personal.\n<br/><br/>La página que pretendes ver es para el ocio personal, y no es momento de hacerlo cuando estés en clase.\n<br/><br/>No olvides que en las Redes Sociales hay que ser prudente con a quién otorgas la categoría de «amigo» y muy cuidadoso con la cantidad y el tipo de fotos que cuelgues: siempre dicen mucho de ti', 'thinfilter')""")
+    
+    ##############################################
     query("""CREATE TABLE config (varname TEXT, 
                                   value TEXT) """)
     
@@ -110,16 +131,10 @@ def create_db():
                                 password TEXT,
                                 roles TEXT) """)
     #
-    # auth table
-    #    role=admin all
-    #    role=firewall firewall
-    #    role=ports    firewall.ports
-    #    .........
-    #    role=x view only
     #
     # insert default data
     query("INSERT into auth (username, password, roles) VALUES ('admin', 'admin', 'admin')")
-    query("INSERT into auth (username, password, roles) VALUES ('demo', 'demo', 'ports')")
+    query("INSERT into auth (username, password, roles) VALUES ('demo', 'demo', 'livestats.livestats')")
     return
 
 

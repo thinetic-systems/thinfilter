@@ -145,6 +145,7 @@ class firewall(object):
         return render.firewall(firewall_vars, 'Guardar')
 
     @thinfilter.common.islogged
+    @thinfilter.common.isinrole('firewall.firewall')
     def POST(self):
         fobj=FireWall()
         data=fobj.vars
@@ -168,7 +169,7 @@ class firewall(object):
 
 class ports(object):
     @thinfilter.common.islogged
-    @thinfilter.common.isinrole('firewall.ports')
+    @thinfilter.common.isinrole('firewall.firewall')
     @thinfilter.common.layout(body='', title='Configuración de puertos')
     def GET(self, options=None):
         fobj=FireWall()
@@ -177,6 +178,7 @@ class ports(object):
         return render.firewall_ports(firewall_vars, 'Guardar')
 
     @thinfilter.common.islogged
+    @thinfilter.common.isinrole('firewall.firewall')
     def POST(self):
         fobj=FireWall()
         data=fobj.vars
@@ -209,6 +211,8 @@ def init():
     menu.appendSubmenu("/firewall", "Configuración", role='firewall.firewall')
     menu.appendSubmenu("/firewall/ports", "Puertos conocidos", role='firewall.firewall')
     thinfilter.common.register_menu(menu)
+    
+    thinfilter.common.register_role_desc('firewall.firewall', "Configurar cortafuegos")
 
 if __name__ == "__main__":
     from pprint import pprint

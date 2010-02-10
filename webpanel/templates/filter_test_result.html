@@ -1,0 +1,17 @@
+$def with (data)
+
+
+<h3>Resultados del test</h1>
+
+<ul>
+<li>URL:$data.url</li>
+
+$if data.blocked:
+    <li>BLOQUEADO <img class="middle" src="/data/noallowed.png"></li>
+$else:
+    <li>URL permitida <img class="middle" src="/data/allowed.png"></li>
+
+$if data.reason:
+    <li>Regla que lo bloquea: <a href="/stop/admin/edit?rule=$data.reason">$data.reason</a></li>
+</ul>
+

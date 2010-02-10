@@ -1,0 +1,52 @@
+$def with ()
+
+<script type="text/javascript">
+function test_filter(){
+  console.log($$("#url")[0].value);
+  $$.post(
+    "/stop/admin/test",
+    { url: $$("#url")[0].value },
+    function(data){
+        console.log(data);
+        $$('#hideshow')[0].style.visibility = 'visible';
+        $$("#result").html(data);
+    },
+    "html"
+    );
+  return false;
+}
+function hide(){
+  $$('#hideshow')[0].style.visibility = 'hidden';
+}
+</script>
+
+
+
+<h1 class="clear">Probar filtro</h1>
+
+
+
+<form method="post" action="/stop/admin/test" onsubmit="javascript:return test_filter();">
+<table id="settings">
+    <tr>
+        <td>URL</td>
+        <td><input type="text" name="url" id="url" value="" size='50'></td>
+    </tr>
+    <tr><td colspan="2"><hr></td></tr>
+
+
+<tr>
+  <td>&nbsp;</td>
+  <td>
+    <input type="button" value="Probar" onClick="javascript:test_filter();">
+  </td>
+</tr>
+</table>
+</form>
+
+<div id="hideshow" style="visibility:hidden;">
+	<div class="popup_block">
+	<a class="close" href="javascript:hide();">&#8855;</a>
+		<div class="popup" id="result">
+	</div>
+</div>

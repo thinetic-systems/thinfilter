@@ -4,3 +4,4 @@ webpanel/graphs/*rrd
 webpanel/graphs/*png
 server/server*
 server.db
+squidGuard/db/*/*.db

@@ -1,0 +1,106 @@
+$def with (data, action='Guardar')
+
+<script>
+function showPopup(){
+  $$('#hideshow')[0].style.visibility = 'visible';
+}
+function showHelp(of){
+  hideHelp();
+  $$('#help')[0].style.visibility = 'visible';
+  $$('#helpdiv')[0].innerHTML=$$('#'+of+'')[0].innerHTML;
+}
+function hideHelp(){
+  $$('#help')[0].style.visibility = 'hidden';
+}
+</script>
+<h1 class="clear">Configuración del filtro</h1>
+
+<h2>Reglas $data.rulename</h2>
+
+<form method="post" action="/stop/admin/edit" onsubmit="javascript:showPopup();">
+<table id="settings">
+
+<tr>
+    <td><a class="helplink" href="javascript:showHelp('domainshelp');">dominios <img src="/data/help.png"></a></td>
+    
+    <td>
+    <textarea class='textarea' cols='60' rows='8' name='domains' id="domains">$data.rulecontent[data.rulename]['domains']</textarea>
+    </td>
+</tr>
+<tr><td colspan="2"><hr></td></tr>
+
+<tr>
+    <td><a class="helplink" href="javascript:showHelp('urlshelp');">direcciones <img src="/data/help.png"></a></td>
+    
+    <td>
+    <textarea class='textarea' cols='60' rows='8' name='urls' id="urls">$data.rulecontent[data.rulename]['urls']</textarea>
+    </td>
+</tr>
+<tr><td colspan="2"><hr></td></tr>
+
+<tr>
+    <td><a class="helplink" href="javascript:showHelp('expressionshelp');">expresiones <img src="/data/help.png"></a></td>
+    
+    <td>
+    <textarea class='textarea' cols='60' rows='8' name='expressions' id="expressions">$data.rulecontent[data.rulename]['expressions']</textarea>
+    </td>
+</tr>
+<tr><td colspan="2"><hr></td></tr>
+
+<tr>
+    <td>&nbsp;</td>
+    <td>
+        <input type="hidden" id="rulename" name="rulename" value="$data.rulename">
+        <input type="submit" id="$action" value="$action">
+    </td>
+</tr>
+</table>
+</form>
+
+
+<div id="hideshow" style="visibility:hidden;">
+	<div class="popup_block">
+		<div class="popup txtcenter">
+			<h3>Aplicando cambios...</h3>
+			(puede tardar un poco)<br/>
+			<img src="/data/loading.gif">
+		</div>
+	</div>
+</div>
+
+<div id="help" style="visibility:hidden;">
+	<div class="popup_block">
+	<a class="close" href="javascript:hideHelp();">&#8855;</a>
+		<div class="popup" id="helpdiv">
+		</div>
+	</div>
+</div>
+
+<div id='domainshelp' style="display:none;">
+    <h3>Ayuda para reglas de dominios</h3>
+    <p>
+        Las reglas son del tipo:<br/>
+        <b>ejemplo.com</b> <br/>
+        <b>sub.ejemplo.com</b>
+    </p>
+</div>
+
+<div id='urlshelp' style="display:none;">
+    <h3>Ayuda para reglas de direcciones URL</h3>
+    <p>
+        Las reglas son del tipo:<br/>
+        <b>http://ejemplo.com/noticias/noticia.php?id=5</b><br/>
+        <b>http://sub.ejemplo.com/buscar.php</b>
+    </p>
+</div>
+<div id='expressionshelp' style="display:none;">
+    <h3>Ayuda para reglas de expresiones</h3>
+    <p>
+        Las reglas son del tipo:<br/>
+        <b>(sex)</b><br/>
+        <b>(porn)</b><br/>
+        <a target="_blank" href="http://www.squidguard.org/Doc/expressionlist.html">Más información</a>
+    </p>
+</div>
+
+

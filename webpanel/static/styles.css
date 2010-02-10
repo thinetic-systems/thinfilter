@@ -64,7 +64,7 @@ margin: auto auto;
 
 #menu {
 /*    background-color:#1b5d91;*/
- margin:0 auto 0 auto; width:680px;
+ margin:0 auto 0 auto; width:880px;
  margin-bottom: 90px;
  font-size: 0.9em;
 /*
@@ -264,3 +264,30 @@ list-style-type: none;
 	top: -20px;
 }
 
+.close {
+	position: absolute;
+	right: 0;
+	top: -5px;
+	text-decoration: none;
+	font-size: 1.5em;
+}
+
+.middle{
+    text-decoration: none;
+    vertical-align:middle;
+    border: 0;
+}
+
+.txtcenter {
+    text-align: center;
+}
+
+.helplink {
+    text-decoration: none;
+    vertical-align:middle;
+}
+.helplink img {
+    text-decoration: none;
+    vertical-align:middle;
+    border: 0;
+}

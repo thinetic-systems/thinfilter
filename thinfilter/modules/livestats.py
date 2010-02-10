@@ -168,6 +168,8 @@ def init():
 
     menu=thinfilter.common.Menu("/livestats", "Estado", order=15, role='livestats.livestats')
     thinfilter.common.register_menu(menu)
+    
+    thinfilter.common.register_role_desc('livestats.livestats', "Ver estado en tiempo real")
 
 if __name__ == "__main__":
     thinfilter.config.debug=True

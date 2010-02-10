@@ -70,6 +70,38 @@ else:
     sys.stderr = lg.stderr()
     sys.stdout = lg.stdout()
 
+################################################################################
+#
+# Overwrite web.utils.safeunicode
+# can't load stop web
+# http://images.google.es/images?hl=es&source=hp&ie=ISO-8859-1&q=porn&btnG=Buscar+im%E1genes&gbv=1&aq=f&oq=
+#
+
+def Mysafeunicode(obj, encoding='utf-8'):
+    r"""
+    Converts any given object to unicode string.
+    
+        >>> safeunicode('hello')
+        u'hello'
+        >>> safeunicode(2)
+        u'2'
+        >>> safeunicode('\xe1\x88\xb4')
+        u'\u1234'
+    """
+    if isinstance(obj, unicode):
+        return obj
+    elif isinstance(obj, str):
+        try:
+            return obj.decode(encoding)
+        except:
+            pass
+    else:
+        if hasattr(obj, '__unicode__'):
+            return unicode(obj)
+        else:
+            return str(obj).decode(encoding)
+
+web.utils.safeunicode=Mysafeunicode
 
 ################################################################################
 #try:
@@ -148,8 +180,16 @@ store = ShelfStore(shelve.open(thinfilter.config.SESSIONS_DIR + '/session.shelf'
 import thinfilter.db
 thinfilter.db.start()
 
+#import thinfilter
+#import thinfilter.common
+#print thinfilter.common.get_roles('demo')
+#sys.exit(0)
+
+
+
 lg.debug("Loading modules", __name__)
 import thinfilter.modules
+thinfilter.common.register_role_desc('admin', "Administrador")
 thinfilter.common.init_modules(thinfilter.modules)
 lg.debug("Modules loaded, here we go....", __name__)
 

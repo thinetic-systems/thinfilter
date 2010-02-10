@@ -26,6 +26,7 @@
 
 import time
 import os
+import copy
 from subprocess import Popen, PIPE, STDOUT
 
 import thinfilter.logger as lg
@@ -51,6 +52,18 @@ def islogged(function):
         username = web.config._session.get('user', '')
         #lg.debug("islogged() username=%s"%username, __name__)
         if username:
+            # check for timestamp
+            timestamp=web.config._session.get('timestamp', 0)
+            #lg.debug("islogged() timestamp=%s"%timestamp, __name__)
+            if int(time.time()) - timestamp > thinfilter.config.sessiontimeout:
+                lg.debug("islogged() timestamp=%s seconds => timeout force logout"%(int(time.time()) - timestamp), __name__)
+                # session expired
+                raise web.seeother("/logout?timeout=1")
+            
+            # update timestamp
+            #lg.debug("islogged() timestamp=%s UPDATED"%( int(time.time()) ), __name__)
+            web.config._session.timestamp=int(time.time())
+            
             return function(*args, **kwargs)
         else:
             raise web.seeother('/login')
@@ -80,32 +93,29 @@ def isinrole(role='', session=None):
             if web.config._session:
                 session=web.config._session
             ROLES=web.config._session.get('roles','')
-            lg.debug("ROLES='%s' role='%s'"%(ROLES, role), __name__)
+            lg.debug("isinole() USER ROLES='%s' needed role='%s'"%(ROLES, role), __name__)
             
             if "admin" in ROLES:
+                lg.debug("isinrole() user is admin, return True", __name__)
                 return function(*args, **kwargs)
                 
-            if role == 'admin':
-                return function(*args, **kwargs)
             elif role in ROLES:
+                lg.debug("isinrole() role found in ROLES, return True", __name__)
                 return function(*args, **kwargs)
             else:
+                lg.debug("isinrole() role not found, return False", __name__)
                 raise web.seeother('/403?role=%s'%(role))
             
         return new_function
     return new_deco
 
-#    
-#    def new_role(function):
-#        # search in roles
-#        try:
-#            roles=web.config._session.get('roles','')
-#            lg.debug("ROLES='%s' role='%s'"%(roles, role), __name__)
-#        except:
-#            pass
-#        return function(*args, **kwargs)
 
-#    return new_role
+def get_user_roles(username):
+    roles=[]
+    _roles=thinfilter.db.query("SELECT roles FROM auth WHERE username='%s'"%username)
+    for r in _roles[0][0].split():
+        roles.append(r)
+    return roles
 
 ################################################################################
 # from /usr/lib/python2.5/BaseHTTPServer.py
@@ -237,49 +247,49 @@ def _sort_menu(menu1, menu2):
     else:
         return -1
 
-def showMenu(role, roles):
-    #lg.debug("role='%s' roles='%s'" %(role, roles))
+def showMenu(role, roles, menu):
+    #lg.debug("role='%s' roles='%s' menu=%s\n" %(role, roles, menu), __name__)
     if "admin" in roles:
+        #lg.debug("showMenu() admin user, return True", __name__)
         return True
     if role == '':
+        #lg.debug("showMenu() role empty, not protected, return True", __name__)
         return True
     elif role in roles:
+        #lg.debug("showMenu() role found in roles, retrurn True", __name__)
         return True
         
-    lg.debug("NOT SHOW role='%s' roles='%s'" %(role, roles))
+    #lg.debug("NOT SHOW role='%s' roles='%s'" %(role, roles))
     return False
 
 def get_menus():
-    #lg.debug("get_menus() antes=%s" %thinfilter.config.menus, __name__)
-    thinfilter.config.menus.sort(_sort_menu)
-    #lg.debug("get_menus() despues=%s" %thinfilter.config.menus, __name__)
-    from pprint import pprint
+    clonedmenus=[]
+    # clone menus (don't work with original objects)
+    for menu in thinfilter.config.menus:
+        clonedmenus.append( copy.copy(menu) )
+    
+    # sort by order attr
+    clonedmenus.sort(_sort_menu)
+    
     roles=tuple()
     if web.config._session:
         roles=web.config._session.get('roles', '')
-    #print "user roles='%s'"%(roles)
+    
     newmenu=[]
     # remove not allowed items
-    for menu in thinfilter.config.menus:
-        #print "\n"
-        #print "menu %s" %menu
-        
+    for menu in clonedmenus:
         if len(menu.submenus) > 0:
             newmenu.append(menu)
             submenus=menu.submenus
-            menu.submenus=[]
+            newmenu[-1].submenus=[]
             for submenu in submenus:
-                #print "  submenu %s\n"%submenu
-                if showMenu(submenu.role, roles):
+                if showMenu(submenu.role, roles, submenu):
                     newmenu[-1].submenus.append(submenu)
             
         else:
             # no submenus
-            if showMenu(menu.role, roles):
+            if showMenu(menu.role, roles, menu):
                 newmenu.append(menu)
-        
-        #print "\n"
-    
     new=[]
     for i in range(len(newmenu)):
         menu=newmenu[i]
@@ -287,7 +297,6 @@ def get_menus():
             pass
         else:
             new.append(menu)
-    #return thinfilter.config.menus
     return new
 
 ################################################################################
@@ -327,3 +336,21 @@ class ThinFilterException(Exception):
             (self.errcode, self.errmsg)
             )
 
+################################################################################
+
+def register_role_desc(role, desc):
+    thinfilter.config.role_desc.append([role,desc])
+
+def get_roles_desc(rol=None):
+    if rol:
+        return get_desc(rol)
+    roles=[]
+    for role in thinfilter.config.role_desc:
+        roles.append(role[0])
+    return roles
+
+def get_desc(role):
+    for r in thinfilter.config.role_desc:
+        if role == r[0]:
+            return r[1]
+    return "desconocido"

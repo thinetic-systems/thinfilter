@@ -28,6 +28,7 @@
 
 import random
 from hashlib import sha1
+import time
 import thinfilter.config
 import thinfilter.logger as lg
 import thinfilter.common
@@ -60,15 +61,16 @@ signin_form = web.form.Form(web.form.Textbox('username',
                                                      lambda x: x in users.keys()),
                                      description='Usuario:'),
                         web.form.Password('password', description='Contraseña:'),
-                        web.form.Button("submit", type="submit", description="Entrar"),
+                        web.form.Button("Entrar", type="submit", description="Entrar"),
                         validators = [web.form.Validator("El usuario o la contraseña son incorrectos.",
                                       lambda x: users[x.username].check_password(x.password)) ]
                         )
 
 
 
+
 class login(object):
-    @thinfilter.common.layout(body='No logueado', title='ThinFilter Login')
+    @thinfilter.common.layout(body='No logueado', title='ThinFilter')
     def GET(self):
         username=web.config._session.get('user', '')
         lg.debug("login::GET() user=%s"%username, __name__)
@@ -86,9 +88,14 @@ class login(object):
             return web.seeother('/')
         else:
             web.config._session.user=my_signin['username'].value
-            web.config._session.roles=thinfilter.db.query("SELECT roles FROM auth WHERE username='%s'"%my_signin['username'].value)[0]
-            lg.debug("login OK set session.user to %s" %my_signin['username'].value, __name__)
-            return render.main(thinfilter.common.get_buttons())
+            web.config._session.roles=thinfilter.common.get_user_roles(my_signin['username'].value)
+            web.config._session.timestamp=int(time.time())
+            lg.debug("login OK set session.user to %s timestamp=%s"
+                      %(my_signin['username'].value, web.config._session.timestamp), __name__)
+            formdata=web.input()
+            if formdata.has_key('redirect'):
+                raise web.seeother(formdata.redirect)
+            raise web.seeother('/')
 
 class logout(object):
     def GET(self):
@@ -96,6 +103,9 @@ class logout(object):
         web.config._session.roles=''
         try:
             web.config._session.kill()
+            formdata=web.input()
+            if formdata.has_key('timeout'):
+                return web.seeother("/403?timeout=1")
         except Exception, err:
             lg.debug("Exception logout, error=%s"%err, __name__)
             traceback.print_exc(file=sys.stderr)

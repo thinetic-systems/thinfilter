@@ -1,0 +1,58 @@
+$def with (data, action='Guardar')
+
+<script>
+function showPopup(){
+  $$('#hideshow')[0].style.visibility = 'visible';
+}
+</script>
+<h1 class="clear">Configuración del filtro</h1>
+
+
+<form method="post" action="/stop/admin" onsubmit="javascript:showPopup();">
+<table id="settings">
+
+
+    <tr>
+        <td>Reglas Editables</td>
+        <td>
+        $for u in data.editable:
+            <a href="/stop/admin/edit?rule=$u">$u</a>
+            <br/>
+        </td>
+    </tr>
+    <tr><td colspan="2"><hr></td></tr>
+
+    <tr>
+        <td>Reglas genéricas</td>
+        <td>
+        $for u in data.rules:
+            $if u in data.squidguard['blocked']:
+                $ st='checked'
+            $else:
+                $ st=''
+            <input type="checkbox" class="noproxyport" name="$(u)" id="$(u)" value="1" $st>
+            $u<br/>
+        </td>
+    </tr>
+    <tr><td colspan="2"><hr></td></tr>
+
+
+
+<tr>
+    <td>&nbsp;</td>
+    <td>
+        <input type="submit" id="$action" value="$action">
+    </td>
+</tr>
+</table>
+</form>
+
+<div id="hideshow" style="visibility:hidden;">
+	<div class="popup_block">
+		<div class="popup txtcenter">
+			<h3>Aplicando cambios...</h3>
+			(puede tardar un poco)<br/>
+			<img src="/data/loading.gif">
+		</div>
+	</div>
+</div>

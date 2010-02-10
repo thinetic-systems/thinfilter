@@ -39,7 +39,14 @@ class denied(object):
     @thinfilter.common.layout(body='Permiso denegado', title='ThinFilter Login')
     def GET(self):
         formdata=web.input()
-        return render.denied(formdata.role)
+        if formdata.has_key('role'):
+            return render.denied(formdata.role)
+        
+        elif formdata.has_key('timeout'):
+            return render.timeout()
+        
+        else:
+            return render.denied('Error desconocido')
 
 
 

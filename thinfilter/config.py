@@ -32,6 +32,7 @@ name = "thinfilter"
 timeout = 8
 uid=None
 devel=False
+sessiontimeout=300 #seconds (5 minutes)
 
 DAEMON_LOG_FILE = "/var/log/thinfilter.log"
 DAEMON_PID_FILE = "/var/run/thinfilter.pid"
@@ -76,5 +77,6 @@ urls=[]
 roles=[]
 menus=[]
 buttons=[]
+role_desc=[]
 
 #print "D: thinblue.config loaded"

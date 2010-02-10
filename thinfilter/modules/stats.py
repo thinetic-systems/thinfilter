@@ -184,6 +184,8 @@ def init():
     menu=thinfilter.common.Menu("/stats/Daily/", "Registros", order=80, role='stats.stats')
     thinfilter.common.register_menu(menu)
     
+    thinfilter.common.register_role_desc('stats.stats', "Ver registros de acceso")
+    
     """
     <a class="qbutton" href="/stats/Daily/"><img src="/data/stats.png" alt="Estadísticas"><br/>Estadísticas</a>
     """
