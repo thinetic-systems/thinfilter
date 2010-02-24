@@ -171,8 +171,4 @@ def init():
     
     thinfilter.common.register_role_desc('livestats.livestats', "Ver estado en tiempo real")
 
-if __name__ == "__main__":
-    thinfilter.config.debug=True
-    thinfilter.config.daemon=False
-    app=DISK()
-    print app.hdd
+

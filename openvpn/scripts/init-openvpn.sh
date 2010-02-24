@@ -11,15 +11,15 @@
 cd /etc/openvpn
 . vars
 
-/etc/init.d/openvpn stop
+invoke-rc.d openvpn stop
 
 ./clean-all
 
 # delete crt and keys
-rm -f *.crt *.key *.pem
+#rm -f *.crt *.key *.pem
 
 if [ "$1" = "only" ]; then
-  /etc/init.d/openvpn start
+  invoke-rc.d openvpn start
   exit 0
 fi
 
@@ -28,4 +28,4 @@ fi
 ./build-ca
 ./build-key-server server
 
-/etc/init.d/openvpn restart
+invoke-rc.d openvpn restart

@@ -1,4 +1,61 @@
-$def with (data, action='Guardar')
+$def with (data, rulename, categories, action='Guardar')
+<script type="text/javascript" src="/data/jquery.tablesorter.min.js"></script>
+<script type="text/javascript" src="/data/InlineEditor.js"></script>
+
+<script type="text/javascript">
+/* definimos algunas variables */
+var url_guardar='ajax/guardar-usuario.html';
+var url_borrar='ajax/borrar-usuario.html';
+var baseimg='/data';
+var celdamaestra="rule";
+</script>
+
+<script type="text/javascript">
+/* 
+* Le decimos a InlineEditor los campos y tipos que son editables 
+* Argumentos:
+*
+*  IEAddEditable (nombre, tipo, extra)
+*
+* tipos permitidos:
+*
+*  - text (tipo input text)
+*  - textarea (tipo textarea)
+*  - select (tipo selección) 
+*      en extra hay que pasar un array que contiene arrays
+*      de parejas texto/valor
+*  - checkbox (tipo casilla de activación)
+*/
+
+
+IEAddEditable ("text", "text", "size='20'");
+var filtertype = new Array();
+    filtertype[0]= new Array ();
+        filtertype[0]['texto']="Dominio";
+        filtertype[0]['valor']="domains";
+    filtertype[1]= new Array ();
+        filtertype[1]['texto']="Dirección URL";
+        filtertype[1]['valor']="urls";
+    filtertype[2]= new Array ();
+        filtertype[2]['texto']="Expresión regular";
+        filtertype[2]['valor']="expressions";
+IEAddEditable ("filtertype", "select", filtertype);
+var mode = new Array();
+    mode[0]= new Array ();
+        mode[0]['texto']="Bloquear";
+        mode[0]['valor']="lista-negra";
+    mode[1]= new Array ();
+        mode[1]['texto']="Permitir";
+        mode[1]['valor']="lista-blanca";
+IEAddEditable ("mode", "select", mode);
+
+var category = new Array();
+$for line in categories:
+    category[$loop.index0]= new Array ();
+        category[$loop.index0]['texto']="$line.description";
+        category[$loop.index0]['valor']="$line.id";
+IEAddEditable ("category", "select", category);
+</script>
 
 <script>
 function showPopup(){
@@ -12,95 +69,65 @@ function showHelp(of){
 function hideHelp(){
   $$('#help')[0].style.visibility = 'hidden';
 }
+
+$if len(data) > 0:
+    $$(document).ready(function()
+        { $$("#settings").tablesorter( {headers: {3:{sorter:false}} } ); }
+    );
 </script>
+
+
 <h1 class="clear">Configuración del filtro</h1>
 
-<h2>Reglas $data.rulename</h2>
+
+$if rulename != '':
+    <h2>Reglas $rulename</h2>
 
 <form method="post" action="/stop/admin/edit" onsubmit="javascript:showPopup();">
-<table id="settings">
-
+<table id="settings" class="inlineeditor tablesorter">
+<thead>
 <tr>
-    <td><a class="helplink" href="javascript:showHelp('domainshelp');">dominios <img src="/data/help.png"></a></td>
-    
-    <td>
-    <textarea class='textarea' cols='60' rows='8' name='domains' id="domains">$data.rulecontent[data.rulename]['domains']</textarea>
-    </td>
+    <th>Regla</th>
+    <th>Tipo</th>
+    <th>Acción</th>
+    <th>Categoría</th>
+    <th>&nbsp;</th>
 </tr>
-<tr><td colspan="2"><hr></td></tr>
+</thead>
+<!-- <tr><td colspan="4"><hr></td></tr> -->
 
-<tr>
-    <td><a class="helplink" href="javascript:showHelp('urlshelp');">direcciones <img src="/data/help.png"></a></td>
-    
-    <td>
-    <textarea class='textarea' cols='60' rows='8' name='urls' id="urls">$data.rulecontent[data.rulename]['urls']</textarea>
-    </td>
-</tr>
-<tr><td colspan="2"><hr></td></tr>
-
-<tr>
-    <td><a class="helplink" href="javascript:showHelp('expressionshelp');">expresiones <img src="/data/help.png"></a></td>
-    
-    <td>
-    <textarea class='textarea' cols='60' rows='8' name='expressions' id="expressions">$data.rulecontent[data.rulename]['expressions']</textarea>
-    </td>
-</tr>
-<tr><td colspan="2"><hr></td></tr>
-
-<tr>
-    <td>&nbsp;</td>
-    <td>
-        <input type="hidden" id="rulename" name="rulename" value="$data.rulename">
-        <input type="submit" id="$action" value="$action">
-    </td>
-</tr>
+$for rule in data:
+    <tr class="rule $loop.parity" id="rule-$rule.id">
+        <td id="text-$rule.id">$rule.text</td>
+        <td id="filtertype-$rule.id">$rule.filtertype.printable</td>
+        <td id="mode-$rule.id">$rule.mode.printable</td>
+        <td id="category-$rule.id">$rule.catinfo.description</td>
+        <td id="editar-$rule.id">
+            <a href="javascript:IEEditarFila($rule.id);">
+                <img src="/data/ieedit.png" alt="Editar">
+            </a>
+        </td>
+    </tr>
+    <!-- <tr id="rule-$rule.id-line"><td colspan="4"><hr></td></tr> -->
 </table>
+
+
+<div class="right">
+        <input type="hidden" id="rulename" name="rulename" value="$rulename">
+        <input type="submit" id="$action" value="$action">
+</div>
 </form>
 
 
 <div id="hideshow" style="visibility:hidden;">
 	<div class="popup_block">
 		<div class="popup txtcenter">
-			<h3>Aplicando cambios...</h3>
+			<h3>Guardando...</h3>
 			(puede tardar un poco)<br/>
 			<img src="/data/loading.gif">
 		</div>
 	</div>
 </div>
 
-<div id="help" style="visibility:hidden;">
-	<div class="popup_block">
-	<a class="close" href="javascript:hideHelp();">&#8855;</a>
-		<div class="popup" id="helpdiv">
-		</div>
-	</div>
-</div>
-
-<div id='domainshelp' style="display:none;">
-    <h3>Ayuda para reglas de dominios</h3>
-    <p>
-        Las reglas son del tipo:<br/>
-        <b>ejemplo.com</b> <br/>
-        <b>sub.ejemplo.com</b>
-    </p>
-</div>
-
-<div id='urlshelp' style="display:none;">
-    <h3>Ayuda para reglas de direcciones URL</h3>
-    <p>
-        Las reglas son del tipo:<br/>
-        <b>http://ejemplo.com/noticias/noticia.php?id=5</b><br/>
-        <b>http://sub.ejemplo.com/buscar.php</b>
-    </p>
-</div>
-<div id='expressionshelp' style="display:none;">
-    <h3>Ayuda para reglas de expresiones</h3>
-    <p>
-        Las reglas son del tipo:<br/>
-        <b>(sex)</b><br/>
-        <b>(porn)</b><br/>
-        <a target="_blank" href="http://www.squidguard.org/Doc/expressionlist.html">Más información</a>
-    </p>
-</div>
 
 

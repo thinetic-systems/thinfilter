@@ -14,7 +14,7 @@ Dirección IP pública: <b>$(extra[1])</b>
 $for v in data:
     <tr>
         <td rowspan="4">
-        $if v['gateway'] != '':
+        $if v['gateway'] and v['gateway'] != '':
             <img class="middle" src="/data/internet-tx-rx.png" title="Tráfico hacia internet">
         $else:
             <img class="middle" src="/data/local-tx-rx.png" title="Tráfico local">
@@ -39,8 +39,8 @@ $for v in data:
     <tr><td colspan="3"><hr></td></tr>
 </table>
 
-<!--
+
 <div class="center" style="text-align:center;">
 <img src="/network/netgraph/cpu.png">
 </div>
--->
+

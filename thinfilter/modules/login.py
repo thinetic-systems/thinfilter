@@ -26,29 +26,13 @@
 # login stuff
 #
 
-import random
-from hashlib import sha1
+
 import time
 import thinfilter.config
 import thinfilter.logger as lg
 import thinfilter.common
 import thinfilter.db
 import traceback
-
-# A simple user object that doesn't store passwords in plain text
-# see http://en.wikipedia.org/wiki/Salt_(cryptography)
-class PasswordHash(object):
-    def __init__(self, password_):
-        self.salt = "".join(chr(random.randint(33,127)) for x in xrange(64))
-        self.saltedpw = sha1(password_ + self.salt).hexdigest()
-    def check_password(self, password_):
-        """checks if the password is correct"""
-        return self.saltedpw == sha1(password_ + self.salt).hexdigest()
-
-# users and password are stored in sqlite3 database
-users={}
-for _auth in thinfilter.db.query("SELECT username,password from auth"):
-    users[_auth[0]]=PasswordHash(_auth[1])
 
 
 
@@ -58,12 +42,12 @@ render = web.template.render(thinfilter.config.BASE + 'templates/')
 
 signin_form = web.form.Form(web.form.Textbox('username',
                                      web.form.Validator('Unknown username.', 
-                                                     lambda x: x in users.keys()),
+                                                     lambda x: x in thinfilter.config.users.keys()),
                                      description='Usuario:'),
-                        web.form.Password('password', description='Contraseña:'),
-                        web.form.Button("Entrar", type="submit", description="Entrar"),
-                        validators = [web.form.Validator("El usuario o la contraseña son incorrectos.",
-                                      lambda x: users[x.username].check_password(x.password)) ]
+                            web.form.Password('password', description='Contraseña:'),
+                            web.form.Button("Entrar", type="submit", description="Entrar"),
+                            validators = [web.form.Validator("El usuario o la contraseña son incorrectos.",
+                                          lambda x: thinfilter.config.users[x.username].check_password(x.password)) ]
                         )
 
 
@@ -73,14 +57,15 @@ class login(object):
     @thinfilter.common.layout(body='No logueado', title='ThinFilter')
     def GET(self):
         username=web.config._session.get('user', '')
-        lg.debug("login::GET() user=%s"%username, __name__)
+        password=web.config._session.get('password', '')
+        lg.debug("login::GET() user=%s password=%s"%(username,password), __name__)
         if not username:
             my_signin = signin_form()
             return render.login(my_signin)
         else:
             return render.main(thinfilter.common.get_buttons())
     
-    @thinfilter.common.layout(body='No logueado', title='ThinFilter Login')
+    #@thinfilter.common.layout(body='No logueado', title='ThinFilter Login')
     def POST(self):
         my_signin = signin_form()
         if not my_signin.validates():
@@ -93,6 +78,7 @@ class login(object):
             lg.debug("login OK set session.user to %s timestamp=%s"
                       %(my_signin['username'].value, web.config._session.timestamp), __name__)
             formdata=web.input()
+            lg.debug(formdata, __name__)
             if formdata.has_key('redirect'):
                 raise web.seeother(formdata.redirect)
             raise web.seeother('/')

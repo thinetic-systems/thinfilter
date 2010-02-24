@@ -1,8 +1,9 @@
 debian/tmp/usr/sbin
 debian/tmp/usr/share/thinfilter/webpanel
-debian/tmp/usr/lib/python*/site-packages/thinfilter/*.py
-debian/tmp/usr/lib/python*/site-packages/thinfilter/modules/*.py
-debian/tmp/var/lib/thindistro
+debian/tmp/usr/share/thinfilter/config
+debian/tmp/usr/lib/python*/*-packages/thinfilter/*.py
+debian/tmp/usr/lib/python*/*-packages/thinfilter/modules/*.py
 debian/tmp/etc/thinfilter
 debian/tmp/etc/openvpn
 debian/tmp/etc/cron.d
+debian/tmp/var/lib/thinfilter

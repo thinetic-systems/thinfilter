@@ -1,4 +1,4 @@
-$def with (body='', title='ThinFilter', session=None, menus=[])
+$def with (body='', title='ThinFilter', session=None, menus=[], config=None)
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="es" lang="es">
 <head>
@@ -16,6 +16,10 @@ $def with (body='', title='ThinFilter', session=None, menus=[])
     <!--img class="netimg margin20" src="/data/etc3300.png" title="ThinFilter">-->
     <h1>ThinFilter</h1>
 </div>
+
+$if config.demo:
+    <h2 class="error" style="margin-bottom: 0px; margin-top: 0px;">Modo demo, no se guardarán los cambios</h2>
+    <h5 class="error" style="margin-bottom: 20px; margin-top: 0px;">(usuario:admin, passwd:admin)</h5>
 
 $if session and session.user:
     <div id="menu" class="clear">

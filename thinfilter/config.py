@@ -26,12 +26,14 @@ import os
 import string
 
 version="__VERSION__"
-daemon = True
+daemon = False
 debug = False
 name = "thinfilter"
 timeout = 8
 uid=None
 devel=False
+demo=False
+ssl=False
 sessiontimeout=300 #seconds (5 minutes)
 
 DAEMON_LOG_FILE = "/var/log/thinfilter.log"
@@ -41,27 +43,14 @@ BASE="/usr/share/thinfilter/webpanel/"
 VAR="/var/lib/thinfilter/"
 SESSIONS_DIR=VAR+"sessions"
 
-#if os.path.isdir("/.dirs/dev/thinfilter"):
-#    DAEMON_LOG_FILE = "/.dirs/dev/thinfilter/thinfilter.log"
-#    DAEMON_PID_FILE = "/.dirs/dev/thinfilter/thinfilter.pid"
-#    DBNAME = "/.dirs/dev/thinfilter/thinfilter.db"
-
 
 # set BASE in git sources dir to debug
-#if os.path.abspath(os.curdir) == "/home/mario/thinetic/git/thinfilter":
-#    BASE="/home/mario/thinetic/git/thinfilter/webpanel/"
-#    DAEMON_LOG_FILE = "/home/mario/thinetic/git/thinfilter/thinfilter.log"
-#    DAEMON_PID_FILE = "/home/mario/thinetic/git/thinfilter/thinfilter.pid"
-#    DBNAME = "/home/mario/thinetic/git/thinfilter/thinfilter.db"
-#    SESSIONS_DIR="/home/mario/thinetic/git/thinfilter/webpanel/sessions"
-
-if os.path.abspath(os.curdir) == "/mnt/thinetic/git/thinfilter":
-    BASE="/mnt/thinetic/git/thinfilter/webpanel/"
-#    DAEMON_LOG_FILE = "/mnt/thinetic/git/thinfilter/thinfilter.log"
-#    DAEMON_PID_FILE = "/mnt/thinetic/git/thinfilter/thinfilter.pid"
-#    DBNAME = "/mnt/thinetic/git/thinfilter/thinfilter.db"
-#    SESSIONS_DIR="/mnt/thinetic/git/thinfilter/webpanel/sessions"
-
+if os.path.isfile('debian/thinfilter.install'):
+    BASE=os.path.abspath('./') + "/webpanel/"
+    DAEMON_LOG_FILE = os.path.abspath('./') + "/thinfilter.log"
+    DAEMON_PID_FILE = os.path.abspath('./') + "/thinfilter.pid"
+    DBNAME = os.path.abspath('./') + "/thinfilter.db"
+    SESSIONS_DIR=os.path.abspath('./') + "/webpanel/sessions"
 
 
 IMAGE_EXTENSIONS=['png', 'jpg', 'jpeg', 'gif', 'bmp', 'ppm', 'pcx', 'tiff']
@@ -78,5 +67,6 @@ roles=[]
 menus=[]
 buttons=[]
 role_desc=[]
+users={}
 
 #print "D: thinblue.config loaded"

@@ -1,0 +1,11 @@
+#THINFILTER
+
+/var/log/openvpn.log
+{
+	compress
+	copytruncate
+	missingok
+	weekly
+	notifempty
+	rotate 7
+}

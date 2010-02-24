@@ -27,54 +27,146 @@ import sys
 import os
 import string
 import traceback
+import time
 
 
 
 import thinfilter
-#thinfilter.init()
-
-
-
 import thinfilter.config
-thinfilter.config.debug=False
-if "--debug" in sys.argv:
-    thinfilter.config.debug=True
 
-if "--devel" in sys.argv:
-    thinfilter.config.devel=True
+import getopt
+
+def usage():
+    print >> sys.stderr , """
+thinfilter [options] action
+    Options:
+        --help -h   (this help)
+        --debug     (enable debug mode)
+        --devel     (enable devel flag)
+        --demo      (don't exec actions)
+        --daemon    (fork on background)
+        --enablessl (enable HTTPS SSL)
+        
+    Actions:
+        --start  (start daemon)
+        --stop   (stop daemon)
+        --status (return 0 if running and 1 if not)
+    
+    Example:
+        thinfilter --debug --nodaemon --devel --demo --start
+"""
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "debug", "devel", "demo", "daemon", "start", "stop", "status", "enablessl"])
+except getopt.GetoptError, err:
+    print >> sys.stderr , "thinfilter ERROR: %s"%(str(err))
+    usage()
+    sys.exit(2)
+
+stop=False
+start=False
+status=False
+
+for o, a in opts:
+    if o in ("-h", "--help"):
+        usage()
+        sys.exit(0)
+    elif o == "--debug":
+        thinfilter.config.debug=True
+        
+    elif o == "--devel":
+        thinfilter.config.devel=True
+        
+    elif o == "--demo":
+        thinfilter.config.demo=True
+        
+    elif o == "--daemon":
+        thinfilter.config.daemon=True
+        
+    elif o == "--enablessl":
+        thinfilter.config.ssl=True
+    
+    elif o == "--start":
+        start=True
+    elif o == "--stop":
+        stop=True
+    elif o == "--status":
+        status=True
+    
+    else:
+        assert False, "thinfilter ERROR, unknow commandline option %s"%(o)
+
+if not start and not stop and not status:
+    print >> sys.stderr , "ERROR start|stop|status action required"
+    usage()
+    sys.exit(1)
 
 
-import thinfilter.logger as lg
+################################################################################
 
-# load daemonize con configure
+if start:
+    import web
+    web.config.debug = False
+    if thinfilter.config.debug:
+        web.config.debug=True
+        thinfilter.config.daemon=True
+
+    import thinfilter.logger as lg
+#    lg.info("init")
+
+#    if thinfilter.config.debug == False:
+#        print "==> logger"
+#        sys.stderr = lg.stderr
+#        print "stderr redirected"
+#        sys.stdout = lg.stdout
+#        print "stdout redirected"
+#        print "  <=== logger"
+#    lg.info("post-init")
+
+#    lg.old_stderr=sys.stderr
+#    lg.old_stdout=sys.stdout
+#    print "sys"
+
+#    print "logger"
+
+#    if thinfilter.config.daemon:
+#        lg.old_stderr=sys.stderr
+#        lg.old_stdout=sys.stdout
+#        sys.stderr = lg.stderr()
+#        sys.stdout = lg.stdout()
+
+# load daemonize
 import thinfilter.daemonize
-lg.old_stderr=sys.stderr
-lg.old_stdout=sys.stdout
 
 
-import web
-web.config.debug = False
+
 
 # load SSL cert
 from web.wsgiserver import CherryPyWSGIServer
 
-# uncomment to enable SSL
-#CherryPyWSGIServer.ssl_certificate = "thinfilter/ssl/server.crt"
-#CherryPyWSGIServer.ssl_private_key = "thinfilter/ssl/server.key"
+#FIXME enable SSL
+if thinfilter.config.ssl:
+    CherryPyWSGIServer.ssl_certificate = "thinfilter/ssl/server.crt"
+    CherryPyWSGIServer.ssl_private_key = "thinfilter/ssl/server.key"
 
 
-if "--debug" in sys.argv:
-    web.config.debug=True
-    thinfilter.config.daemon=False
-else:
-    sys.stderr = lg.stderr()
-    sys.stdout = lg.stdout()
+#if start:
+#    if thinfilter.config.debug:
+#        web.config.debug=True
+#        if not thinfilter.config.daemon:
+#            thinfilter.config.daemon=False
+#        
+#    elif thinfilter.config.daemon:
+#        sys.stderr = lg.stderr()
+#        sys.stdout = lg.stdout()
+
+
 
 ################################################################################
 #
 # Overwrite web.utils.safeunicode
 # can't load stop web
-# http://images.google.es/images?hl=es&source=hp&ie=ISO-8859-1&q=porn&btnG=Buscar+im%E1genes&gbv=1&aq=f&oq=
+# http://images.google.es/images?hl=es&source=hp&ie=ISO-8859-1&q=foo&btnG=Buscar+im%E1genes&gbv=1&aq=f&oq=
 #
 
 def Mysafeunicode(obj, encoding='utf-8'):
@@ -93,8 +185,9 @@ def Mysafeunicode(obj, encoding='utf-8'):
     elif isinstance(obj, str):
         try:
             return obj.decode(encoding)
-        except:
-            pass
+        except Exception, err:
+            lg.debug("Mysafeunicode() exception, error=«%s»\nobj=%s"%(err,obj), __name__)
+            return unicode(obj, errors='ignore')
     else:
         if hasattr(obj, '__unicode__'):
             return unicode(obj)
@@ -102,70 +195,10 @@ def Mysafeunicode(obj, encoding='utf-8'):
             return str(obj).decode(encoding)
 
 web.utils.safeunicode=Mysafeunicode
-
 ################################################################################
-#try:
-#    import cPickle as pickle
-#except ImportError:
-#    import pickle
-#import base64
-
-#class DiskStore(web.session.DiskStore):
-#    def decode(self, session_data):
-#        """decodes the data to get back the session dict """
-#        #lg.debug("Store::decode() session_data=%s"%session_data, __name__)
-#        pickled = base64.decodestring(session_data)
-#        #lg.debug("Store::decode() pickled=%s"%pickled, __name__)
-#        try:
-#            data=pickle.loads(pickled)
-#            #lg.debug("Store::decode() data=%s"%data, __name__)
-#        except Exception, err:
-#            #lg.error("Store::decode() Exception: session_data '%s'"%session_data, __name__)
-#            #lg.error("Store::decode() Exception: pickled '%s'"%pickled, __name__)
-#            lg.error("Store::decode() Exception: error '%s'"%err, __name__)
-#            traceback.print_exc(file=sys.stderr)
-#            #return {'ip':'', 'user':'', 'session_id':''}
-#            return None
-#        #print data
-#        return data
-
-#class MySession(web.session.Session):
-#    def _load(self):
-#        """Load the session from the store, by the id from cookie"""
-#        cookie_name = self._config.cookie_name
-#        cookie_domain = self._config.cookie_domain
-#        self.session_id = web.cookies().get(cookie_name)
-
-#        # protection against session_id tampering
-#        if self.session_id and not self._valid_session_id(self.session_id):
-#            self.session_id = None
-
-#        self._check_expiry()
-#        if self.session_id:
-#            d = self.store[self.session_id]
-#            try:
-#                self.update(d)
-#            except:
-#                print "store=>%s"%self.store
-#                print "session_id=>", self.session_id
-#                print "d=>", d
-#                traceback.print_exc(file=sys.stderr)
-#            self._validate_ip()
-#        
-#        if not self.session_id:
-#            self.session_id = self._generate_session_id()
-
-#            if self._initializer:
-#                if isinstance(self._initializer, dict):
-#                    self.update(self._initializer)
-#                elif hasattr(self._initializer, '__call__'):
-#                    self._initializer()
-# 
-#        self.ip = web.ctx.ip
-
-#web.session.Session=MySession
-################################################################################
-
+#
+# Use shelve for Storage sessions
+#
 import shelve
 class ShelfStore(web.session.ShelfStore):
     def __getitem__(self, key):
@@ -173,46 +206,52 @@ class ShelfStore(web.session.ShelfStore):
         self[key] = v # update atime
         return v
 
-store = ShelfStore(shelve.open(thinfilter.config.SESSIONS_DIR + '/session.shelf'))
+store = ShelfStore(shelve.open(thinfilter.config.SESSIONS_DIR + '/sessions.shelf'))
 ################################################################################
 
-# init database
-import thinfilter.db
-thinfilter.db.start()
+import web.httpserver
 
-#import thinfilter
-#import thinfilter.common
-#print thinfilter.common.get_roles('demo')
-#sys.exit(0)
+def runsimple(func, server_address=("0.0.0.0", 9090)):
+    func = lg.LogThinFilter(func)
+    from web.wsgiserver import CherryPyWSGIServer
+    server=CherryPyWSGIServer(server_address, func, server_name="localhost")
 
-
-
-lg.debug("Loading modules", __name__)
-import thinfilter.modules
-thinfilter.common.register_role_desc('admin', "Administrador")
-thinfilter.common.init_modules(thinfilter.modules)
-lg.debug("Modules loaded, here we go....", __name__)
+    #print "http://%s:%d/" % server_address
+    lg.info("\n\n\t\tserver started: http://%s:%d/\n"%server_address)
+    try:
+        server.start()
+    except KeyboardInterrupt:
+        server.stop()
 
 
-
-# global app
-app = web.application(thinfilter.common.geturls(), globals())
-render = web.template.render(thinfilter.config.BASE + 'templates/')
-
-#db = web.database(dbn='sqlite', db=thinfilter.config.DBNAME)
-
-# from http://webpy.org/cookbook/session_with_reloader
-# use only one session instead of debug=True
-if web.config.get('_session') is None:
-    #session = web.session.Session(app, DiskStore(thinfilter.config.SESSIONS_DIR), {'user': ''})
-    session = web.session.Session(app, store, {'user': ''} )
-    web.config._session = session
-else:
-    session = web.config._session
+web.httpserver.runsimple=runsimple
+################################################################################
 
 
+if start:
+    # init database
+    import thinfilter.db
+    thinfilter.db.start()
+    
+    
+    lg.debug("Loading modules", __name__)
+    import thinfilter.modules
+    thinfilter.common.register_role_desc('admin', "Administrador")
+    thinfilter.common.init_modules(thinfilter.modules)
+    lg.debug("Modules loaded, here we go....", __name__)
 
-import thinfilter.common
+
+    # global app
+    app = web.application(thinfilter.common.geturls(), globals())
+    render = web.template.render(thinfilter.config.BASE + 'templates/')
+
+    # from http://webpy.org/cookbook/session_with_reloader
+    # use only one session instead of debug=True
+    if web.config.get('_session') is None:
+        session = web.session.Session(app, store, {'user': ''} )
+        web.config._session = session
+    else:
+        session = web.config._session
 
 
 
@@ -222,23 +261,37 @@ if __name__ == "__main__":
     args=[]
     for arg in sys.argv[1:]:
         args.append(arg)
-    sys.argv=[sys.argv[0], '9090']
-    lg.debug("main() sys.argv=%s args=%s" %(sys.argv,args) )
-    if "--start" in args:
-        if not "--nodaemon" in args:
-            lg.debug("daemonize....")
-            thinfilter.daemonize.start_server()
-        app.run()
     
-    elif "--stop" in args:
-        thinfilter.daemonize.stop_server(sys.argv[0])
-        pass
-    
-    else:
-        print >> lg.old_stderr , """
-thinfilter:
-        --start    - start web daemon
-        --stop     - stop daemon
+    lg.info("main() sys.argv=%s args=%s debug=%s daemon=%s" %(sys.argv,args, thinfilter.config.debug, thinfilter.config.daemon) ,__name__)
+    if start:
+        sys.argv=[sys.argv[0], '9090']
+        
+        # change procname
+        try:
+            thinfilter.daemonize.set_proc_name('thinfilter')
+            sys.argv=['thinfilter', '9090']
+        except Exception, err:
+            print "Exception changing name of process, error=%s"%err
 
-    You can access interface in http://localhost:9090
-"""
+        if thinfilter.config.daemon:
+            lg.debug("daemonize....", __name__)
+            #thinfilter.daemonize.start_server()
+        app.run()
+        lg.info("main() closing...", __name__)
+        
+        
+        # set None in shelf object or Exceptions ocurr in close()
+        # http://stackoverflow.com/questions/2180946/really-weird-issue-with-shelve-python
+        # http://bugs.python.org/issue6294
+        store.shelf=None
+    
+    elif stop:
+        store.shelf=None
+        thinfilter.daemonize.stop_server('thinfilter')
+    
+    elif status:
+        store.shelf=None
+        thinfilter.daemonize.status()
+
+
+

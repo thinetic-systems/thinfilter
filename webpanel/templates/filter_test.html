@@ -2,12 +2,10 @@ $def with ()
 
 <script type="text/javascript">
 function test_filter(){
-  console.log($$("#url")[0].value);
   $$.post(
     "/stop/admin/test",
     { url: $$("#url")[0].value },
     function(data){
-        console.log(data);
         $$('#hideshow')[0].style.visibility = 'visible';
         $$("#result").html(data);
     },

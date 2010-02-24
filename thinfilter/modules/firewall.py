@@ -44,9 +44,9 @@ render = web.template.render(thinfilter.config.BASE + 'templates/')
 FW_CONF="/etc/thinfilter/firewall.conf"
 FW_SCRIPT="/usr/sbin/thinfilter.fw"
 
-#delete this
+#DEVELOPMENT MODE
 if thinfilter.config.devel:
-    lg.debug("firewall devel active", __name__ )
+    #lg.debug("firewall devel active", __name__ )
     FW_CONF="firewall/firewall.conf"
     FW_SCRIPT="firewall/thinfilter.fw"
 
@@ -62,12 +62,6 @@ VARS=[
       'KNOW_PORTS',
       ]
 
-#FW_PORTS={
-#        'https':[443],
-#        'ftp':['ftp'],
-#        'ssh':[22],
-#        'correo':[25,465,110,995,143,993],
-#        }
 
 class FireWall(thinfilter.common.Base):
     def __init__(self):
@@ -160,10 +154,9 @@ class firewall(object):
                     data[param]='0'
                 else:
                     lg.debug("firewall::POST() NOT FOUND param='%s' old='%s'"%(param, data[param]), __name__ )
-        from pprint import pprint
-        pprint(data)
-        fobj.save(data)
-        fobj.restart()
+        if not thinfilter.config.demo:
+            fobj.save(data)
+            fobj.restart()
         return web.seeother('/firewall')
 
 
@@ -190,13 +183,13 @@ class ports(object):
                 portname=elem.replace('name_', '')
                 portnumbers=str(formdata['numbers_'+portname]).strip()
                 ports[portname.strip()]=portnumbers
-        print ports
         portstxt=''
         for p in ports:
             if ports[p] == '': continue
             portstxt+="%s:%s "%(p,ports[p])
         fobj.vars['KNOW_PORTS']=portstxt
-        fobj.save(fobj.vars)
+        if not thinfilter.config.demo:
+            fobj.save(fobj.vars)
         return web.seeother('/firewall/ports')
 
 
@@ -215,9 +208,9 @@ def init():
     thinfilter.common.register_role_desc('firewall.firewall', "Configurar cortafuegos")
 
 if __name__ == "__main__":
-    from pprint import pprint
-    thinfilter.config.daemon=False
-    thinfilter.config.debug=True
+    #from pprint import pprint
+    #thinfilter.config.daemon=False
+    #thinfilter.config.debug=True
     
     app = FireWall()
     pprint(app.vars)

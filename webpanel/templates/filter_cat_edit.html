@@ -1,0 +1,40 @@
+$def with (data)
+
+
+
+$if data.id == 0:
+    <h1 class="clear">Nueva categoría</h1>
+$else:
+    <h1 class="clear">Editar categoría</h1>
+
+
+<form method="post" action="/stop/admin/categories">
+<table id="settings">
+    <tr>
+        <td>Descripción de la regla</td>
+        <td><input type="text" name="description" id="description" value="$data.description"></td>
+    </tr>
+    <tr>
+        <td>Texto que se mostrará<br/><small>(se puede usar etiquetas HTML)</small></td>
+        <td><textarea name="text" id="text" cols="80" rows="9">$:data.text</textarea></td>
+    </tr>
+</table>
+
+<div class="right">
+        <input type="hidden" id="id" name="id" value="$data.id">
+        <input type="submit" id="action" value="Guardar">
+</div>
+</form>
+
+<div id="hideshow" style="visibility:hidden;">
+	<div class="popup_block">
+		<div class="popup txtcenter">
+			<h3>Guardando...</h3>
+			(puede tardar un poco)<br/>
+			<img src="/data/loading.gif">
+		</div>
+	</div>
+</div>
+
+
+

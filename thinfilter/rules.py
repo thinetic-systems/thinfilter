@@ -432,6 +432,6 @@ if __name__ == "__main__":
     #for a in app.getdata():
     #    print "%s=%s %s" %(a.varname, a.value, a.itype)
     
-    app=squid()
+    #app=squid()
     #print app.getdata()
-    print app.mgrinfo()
+    #print app.mgrinfo()

@@ -1,0 +1,44 @@
+$def with (data)
+
+
+
+
+<h1 class="clear">Categorías</h1>
+
+
+<table id="settings" class="inlineeditor tablesorter">
+
+    <thead>
+        <tr>
+            <th>Categoría</th>
+            <th>&nbsp;</th>
+        </tr>
+    </thead>
+
+    $for rule in data:
+        <tr class="$loop.parity">
+            <td>$rule.description</td>
+            <td><a href="/stop/admin/categories?id=$rule.id">editar</a></td>
+        </tr>
+</table>
+
+
+<div class="right">
+        <a href="/stop/admin/categories?id=0">Nueva categoría</a>
+</div>
+
+
+
+
+<div id="hideshow" style="visibility:hidden;">
+	<div class="popup_block">
+		<div class="popup txtcenter">
+			<h3>Guardando...</h3>
+			(puede tardar un poco)<br/>
+			<img src="/data/loading.gif">
+		</div>
+	</div>
+</div>
+
+
+

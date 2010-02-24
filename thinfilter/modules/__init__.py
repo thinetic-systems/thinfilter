@@ -40,6 +40,8 @@ def __init__():
         if _ext_name == "__init__":
             continue
         _ext.append( _ext_name )
+        #import thinfilter.config
+        #print "modules/__init__ load %s daemon=%s devel=%s"%(_ext_name, thinfilter.config.daemon, thinfilter.config.devel)
         try:
             if __sys__.version_info[0:3] < (2, 5, 0):
                 __import__('thinfilter.modules.' + _ext_name, globals(), locals(), ['modules'] ) 
@@ -49,6 +51,7 @@ def __init__():
             print "Exception importing module='%s', err='%s'"%(_ext_name, err)
             __traceback__.print_exc(file=__sys__.stderr)
             continue
+        #print "                      %s daemon=%s devel=%s"%(_ext_name, thinfilter.config.daemon, thinfilter.config.devel)
     return _ext
 
 

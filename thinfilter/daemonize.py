@@ -32,6 +32,7 @@ def daemonize():
     #print "daemonize..."
     # do the UNIX double-fork magic, see Stevens' "Advanced
     # Programming in the UNIX Environment" for details (ISBN 0201563177)
+    #print "fork 1"
     try:
         pid = os.fork()
         if pid > 0:
@@ -60,7 +61,7 @@ def daemonize():
 
 
 def killall(proc_name):
-    os.system("killall %s"%proc_name)    
+    os.system("killall %s >/dev/null 2>&1"%proc_name)
 
 
 def start_server():
@@ -93,10 +94,18 @@ def stop_server(proc_name, ignore = False, wait = False):
 def status():
     if not os.path.exists(thinfilter.config.DAEMON_PID_FILE):
         # daemon not running
+        print("daemon not running PID not found")
         sys.exit(1)
     pid = open(thinfilter.config.DAEMON_PID_FILE, 'r').read()
     # if proccess is running will have a /proc/XXX dir
     if os.path.isdir("/proc/%d" %int(pid)):
         sys.exit(0)
-    
+    sys.exit(1)
 
+
+def set_proc_name(newname):
+    from ctypes import cdll, byref, create_string_buffer
+    libc = cdll.LoadLibrary('libc.so.6')
+    buff = create_string_buffer(len(newname)+1)
+    buff.value = newname
+    libc.prctl(15, byref(buff), 0, 0, 0)

@@ -78,7 +78,7 @@ $def with (data, action='Guardar')
         top: -20px;
     }
     .popup table {width:70%; margin-left:15%; margin-right:15%; margin-top:50px; padding-bottom: 200px;}
-
+    .close { position: absolute; right: 0; top: -5px; text-decoration: none; font-size: 1.5em;}
     -->
     </style>
     <script type="text/javascript">
@@ -89,13 +89,16 @@ document.getElementById('browser').innerHTML=browser;
 function showForm() {
 document.getElementById('hideshow').style.visibility = 'visible';
 }
+function hideForm(){
+document.getElementById('hideshow').style.visibility = 'hidden';
+}
 </script>
 </head>
 <body onload='set_browser();'>
     <div id="windowed" class="center">
         
             <h1>Sistema de control de acceso</h1>
-            <h2>:: La siguiente direcci&oacute;n no est&aacute; permitida ::</h2>
+            <h2>:: Sitio no permitido ::</h2>
         
     </div>
     <hr noshade size="1px">
@@ -121,6 +124,7 @@ document.getElementById('hideshow').style.visibility = 'visible';
     
     <div id="hideshow" style="visibility:hidden;">
     <div class="popup_block">
+    <a class="close" href="javascript:hideForm();">&#8855;</a>
     <div class="popup">
         <h3>Acceso</h3>
         <form method="post" action="http://$data.src/login">
@@ -136,12 +140,14 @@ document.getElementById('hideshow').style.visibility = 'visible';
             <tr>
                 <td>&nbsp;</td>
                 <td>
-                    <input type="hidden" name="redirect" id="redirect" value="/stop/admin/edit?rule=$data.targetclass">
+                    <input type="hidden" name="redirect" id="redirect" value="/stop/admin/unblock?rule=$data.targetclass&reason=$data.reason&urlbase64=$data.urlbase64">
                     <input type="hidden" name="url" id="url" value="$data.url">
+                    <input type="hidden" name="urlbase64" id="urlbase64" value="$data.urlbase64">
                     <input type="hidden" name="clientname" id="clientname" value="$data.clientname">
                     <input type="hidden" name="clientident" id="clientident" value="$data.clientident">
                     <input type="hidden" name="srcclass" id="srcclass" value="$data.srcclass">
                     <input type="hidden" name="targetclass" id="targetclass" value="$data.targetclass">
+                    <input type="hidden" name="reason" id="reason" value="$data.reason">
                     <input type="submit" id="Entrar" value="Entrar">
                 </td>
             </tr>

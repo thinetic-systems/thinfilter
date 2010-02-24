@@ -43,7 +43,7 @@ import thinfilter.logger as log
 class CPU(object):
     def __init__(self):
         self.fname="%s/cpu"%(GRAPH_PATH)
-        if not os.path.isfile(self.fname):
+        if not os.path.isfile(self.fname + ".rrd"):
             self.create()
 
     def create(self):
@@ -59,6 +59,22 @@ class CPU(object):
                 "RRA:AVERAGE:0.5:1440:1",
                 "RRA:MIN:0.5:1440:1",
                 "RRA:MAX:0.5:1440:1")
+        log.info( "CPU create (%s)"%self.fname, __name__ )
+#/usr/bin/rrdtool create /www/htdocs/rrd/logs/localhost_stats/cpu.rrd \
+#    --step 300 \
+#    DS:user:COUNTER:600:0:U \
+#    DS:system:COUNTER:600:0:U \
+#    DS:nice:COUNTER:600:0:U \
+#    DS:idle:COUNTER:600:0:U \
+#    DS:iowait:COUNTER:600:0:U \
+#    RRA:AVERAGE:0.5:1:800 \
+#    RRA:AVERAGE:0.5:6:800 \
+#    RRA:AVERAGE:0.5:24:800 \
+#    RRA:AVERAGE:0.5:288:800 \
+#    RRA:MAX:0.5:1:800 \
+#    RRA:MAX:0.5:6:800 \
+#    RRA:MAX:0.5:24:800 \
+#    RRA:MAX:0.5:288:800
 
 
     def update(self):
@@ -82,7 +98,7 @@ class CPU(object):
                        "-t", "load1:load5:load15:user:nice:system",
                        "N:%s:%s:%s:%s:%s:%s"%(load1, load5, load15, user, nice, system)
                     )
-        log.info( "CPU update ===> (N:%s:%s:%s:%s:%s:%s)"%(load1, load5, load15, user, nice, system), __name__ )
+        log.info( "CPU update (%s) ===> (N:%s:%s:%s:%s:%s:%s)"%(self.fname, load1, load5, load15, user, nice, system), __name__ )
 
     def graph(self):
         rrdtool.graph("%s.png"%self.fname,
@@ -136,12 +152,16 @@ class CPU(object):
                       "COMMENT:	\\j")
         log.info("updated %s.png"%self.fname, __name__)
 
-class Net():
+
+################################################################################
+
+
+class Net(object):
     def __init__(self, iface="eth0"):
         self.iface=iface
         secure_iface=iface.replace(':', '_')
         self.fname="%s/%s"%(GRAPH_PATH, secure_iface)
-        if not os.path.isfile(self.fname):
+        if not os.path.isfile(self.fname + ".rrd"):
             self.create()
         
     def create(self):
@@ -153,6 +173,22 @@ class Net():
                 "RRA:AVERAGE:0.5:6:672",
                 "RRA:AVERAGE:0.5:24:732",
                 "RRA:AVERAGE:0.5:144:1460")
+        log.info( "CPU create (%s)"%self.fname, __name__ )
+
+#/usr/bin/rrdtool create /www/htdocs/rrd/logs/localhost_stats/eth0.rrd \
+#    --step 300 \
+#    DS:in:COUNTER:600:0:1250000 \
+#    DS:out:COUNTER:600:0:1250000 \
+#    RRA:AVERAGE:0.5:1:800 \
+#    RRA:AVERAGE:0.5:6:800 \
+#    RRA:AVERAGE:0.5:24:800 \
+#    RRA:AVERAGE:0.5:288:800 \
+#    RRA:MAX:0.5:1:800 \
+#    RRA:MAX:0.5:6:800 \
+#    RRA:MAX:0.5:24:800 \
+#    RRA:MAX:0.5:288:800
+
+
 
     def update(self):
         if not os.path.isfile("%s.rrd"%self.fname):
@@ -161,25 +197,29 @@ class Net():
         f=open("/proc/net/dev", 'r')
         for line in f.readlines():
             if "%s:"%self.iface in line:
-                #print line.split()
-                if "%s: " in line.split()[0]:
+                #if "%s: " in line.split()[0]:
+                if len(line.split()) == 17:
                     tx=int(line.split()[9])
+                    rx=int(line.split()[1])
                     #print "tx at 9"
                 else:
                     tx=int(line.split()[8])
-                    #print "tx at 8"
-                rx=line.split()[0].replace("%s:"%self.iface, "")
-                if rx == "":
-                    rx=int(line.split()[1])
-                data['tx']="%s" %( int(tx) )
-                data['rx']="%s" %( int(rx) )
+                    rx=line.split()[0].replace("%s:"%self.iface, "")
+                
                 f.close()
                 rrdtool.update("%s.rrd"%self.fname,
                         "-t", "incoming:outgoing", 
-                        "N:%s:%s"%(data['rx'], data['tx'])
+                        "N:%s:%s"%(rx, tx)
                     )
-                log.info( "NET update (%s)===> (N:%s:%s)"%(self.iface, data['rx'], data['tx']), __name__ )
+                log.info( "NET update (%s)===> (N:%s:%s)"%(self.fname, rx, tx), __name__ )
                 return
+
+#/usr/bin/rrdtool update \
+#    /www/htdocs/rrd/logs/localhost_stats/eth0.rrd \
+#    --template \
+#    in:out \
+#    N:$output
+
 
     def graph(self):
         rrdtool.graph("%s.png"%self.fname,
@@ -209,6 +249,25 @@ class Net():
                     "HRULE:0#000000")
         log.info( "updated %s.png"%self.fname, __name__ )
 
+#Graph[eth0]:
+#    --rigid
+#    --base=1000
+#    --alt-autoscale-max
+#    -v "Bytes Per Second"
+#    DEF:a=eth0.rrd:in:AVERAGE
+#    DEF:b=eth0.rrd:out:AVERAGE
+#    CDEF:cdefe=b,-1,*
+#    AREA:a#eacc00:Inbound
+#    GPRINT:a:LAST:" Cur\:%8.2lf %s"
+#    GPRINT:a:AVERAGE:"Ave\:%8.2lf %s"
+#    GPRINT:a:MAX:"Max\:%8.2lf %s\n"
+#    LINE1:a#000001:
+#    AREA:cdefe#da4725:Outbound
+#    GPRINT:b:LAST:"Cur\:%8.2lf %s"
+#    GPRINT:b:AVERAGE:"Ave\:%8.2lf %s"
+#    GPRINT:b:MAX:"Max\:%8.2lf %s\n"
+#    LINE1:cdefe#000001:
+#    HRULE:0#000000
 
 
 

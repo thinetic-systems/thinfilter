@@ -252,7 +252,6 @@ class xmlrpc_registers(object):
                         setattr(self, submethod.func_name, submethod)
             else:
                 lg.error("Module '%s' don't have init() method"%mod, __name__)
-                print dir(obj)
         
         __allmods__=[]
         for mod in dir(self):
@@ -291,13 +290,13 @@ class ServerDB(thinfilter.db.Sqlite3):
 
 
 
-if __name__=='__main__':
-    thinfilter.config.debug=True
-    sql=ServerDB()
-    sql.start()
-    for row in sql.select("select * from config"):
-        print row
-    sql.close()
+#if __name__=='__main__':
+#    thinfilter.config.debug=True
+#    sql=ServerDB()
+#    sql.start()
+#    for row in sql.select("select * from config"):
+#        print row
+#    sql.close()
 #    #thinfilter.config.debug=True
 #    #lg.info("running", __name__)
 #    db='people.db'

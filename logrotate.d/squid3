@@ -1,5 +1,5 @@
 #
-# Logrotate fragment for squid3.
+#THINFILTER Logrotate fragment for squid3.
 #
 /var/log/squid3/*.log {
 	daily

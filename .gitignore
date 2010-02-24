@@ -1,7 +1,10 @@
 openvpn/ipp.txt
 thinfilter.log
+thinfilter.db
 webpanel/graphs/*rrd
 webpanel/graphs/*png
+webpanel/sessions
 server/server*
 server.db
 squidGuard/db/*/*.db
+thinfilter/procname.so

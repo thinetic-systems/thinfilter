@@ -244,7 +244,8 @@ class dhcp(object):
             lg.debug("dhcp::POST() param=%s new=%s"%(param, getattr(formdata, param.replace('_','-')) ), __name__ )
             data[param]=getattr(formdata, param.replace('_','-'))
         lg.debug("dhcp::POST() data=%s"%data, __name__)
-        dnsmasq.save(data)
+        if not thinfilter.config.demo:
+            dnsmasq.save(data)
         return web.seeother('/network/dhcp')
 
 class netStats(object):
@@ -334,7 +335,7 @@ class netgraph(object):
         sfile=str(sfile)
         from thinfilter.statcreator import Net, CPU
         lg.debug("netgraph()::GET sfile=%s"%sfile, __name__)
-        if "eth" in sfile or "br" in sfile:
+        if "eth" in sfile or "br" in sfile or "tun" in sfile:
             app=Net(iface=str(sfile.split('.')[0]))
             app.graph()
         elif "cpu" in sfile:
@@ -390,8 +391,3 @@ def init():
 
 
 
-if __name__ == "__main__":
-    thinfilter.config.daemon=False
-    thinfilter.config.debug=True
-    
-    print extraStats().get()

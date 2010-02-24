@@ -50,19 +50,25 @@ class UserObj(web.Storage):
     def save(self):
         # insert/edit in database
         
-        exists=thinfilter.db.query("SELECT username FROM auth WHERE username='%s'"%(thinfilter.db.clean(self.username)))
+        exists=thinfilter.db.query("SELECT username,password FROM auth WHERE username='%s'"%(thinfilter.db.clean(self.username)))
+        
         if len(exists) < 1:
             # insert
+            passwd=thinfilter.common.PasswordHash(password_=self.password).get()
             ret=thinfilter.db.query("INSERT INTO auth (username, password, roles) VALUES ('%s', '%s', '%s')"
                                 %(thinfilter.db.clean(self.username),
-                                  thinfilter.db.clean(self.password),
+                                  passwd,
                                   " ".join(self.roles)
                                   )
                                )
         else:
             # edit username
+            if self.password != '':
+                passwd=thinfilter.common.PasswordHash(password_=self.password).get()
+            else:
+                passwd=exists[0][1]
             ret=thinfilter.db.query("UPDATE auth set password='%s', roles='%s' WHERE username='%s'"
-                                %(thinfilter.db.clean(self.password),
+                                %(passwd,
                                   " ".join(self.roles),
                                   thinfilter.db.clean(self.username)
                                   )
@@ -91,7 +97,7 @@ class Users(object):
         return user
 
     def save_user(self, formdata):
-        print formdata
+        lg.debug("save_user() %s"%formdata, __name__)
         user=UserObj()
         # get username
         if formdata.has_key('new') and formdata.new == '0':
@@ -100,17 +106,18 @@ class Users(object):
             user.username=formdata.username
         
         # compare password and save
-        if formdata.password == formdata.password2:
-            user.password=formdata.password
-        else:
-            return False
+        if formdata.password != '':
+            if formdata.password == formdata.password2:
+                user.password=formdata.password
+            else:
+                return False
         
         for role in thinfilter.common.get_roles_desc():
             if role in formdata.keys():
                 user.roles.append(role)
         
         user.save()
-        print user
+        lg.debug("user=%s"%user, __name__)
 
     def edit(self, userobj):
         pass
@@ -146,7 +153,9 @@ class edit(object):
     @thinfilter.common.isinrole('users.edit')
     def POST(self):
         formdata=web.input()
-        Users().save_user(formdata)
+        #print formdata
+        if not thinfilter.config.demo:
+            Users().save_user(formdata)
         raise web.seeother('/users')
 
 
@@ -183,6 +192,6 @@ def init():
 
 
 
-if __name__ == "__main__":
-    thinfilter.config.daemon=False
-    thinfilter.config.debug=True
+#if __name__ == "__main__":
+#    thinfilter.config.daemon=False
+#    thinfilter.config.debug=True

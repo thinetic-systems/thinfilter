@@ -33,48 +33,24 @@ SCRIPTNAME=/etc/init.d/thinfilter
 
 do_start()
 {
-    # link [CompactFlash]/thinfilter in /var/lib/thinfilter/files
-    if [ "$(grep -c thinnobind /proc/cmdline)" = "0" ] && [ -d /.dirs/dev/ ]; then
-
-        if mkdir -p /.dirs/dev/system 2>/dev/null; then
-            # copy && move conf to system
-            cp -ra /var/lib/thinfilter/* /.dirs/dev/system/
-            
-            # squid3
-            [ -e /etc/squid3/not-configured ] && \
-                mount -o bind /.dirs/dev/system/squid3 /etc/squid3
-            
-            # dansguardian
-            [ -e /etc/dansguardian/not-configured ] && \
-                mount -o bind /.dirs/dev/system/dansguardian /etc/dansguardian
-            
-            
-            cp /var/lib/thinblue/files/* /.dirs/dev/thinblue
-                rm -rf /var/lib/thinblue/files
-            ln -s /.dirs/dev/thinblue /var/lib/thinblue/files
-        fi
-
-    fi
-
-
     [ ! -d /var/run ] && mkdir -p /var/run
 
     # start thinfilter daemon 
     # (use daemonize and double fork, not need start-stop-daemon)
-    $DAEMON --start
+    $DAEMON --start >/dev/null 2>&1
 }
 
 
 do_stop()
 {
-    $DAEMON --stop
+    $DAEMON --stop >/dev/null 2>&1 || true
 }
 
 
 
 case "$1" in
   start)
-	log_daemon_msg "Starting $DESC"
+	log_daemon_msg "Starting" "$DESC"
 	do_start
 	case "$?" in
 		0|1) log_end_msg 0 ;;
@@ -82,12 +58,9 @@ case "$1" in
 	esac
 	;;
   stop)
-	log_daemon_msg "Stopping $DESC"
+	log_daemon_msg "Stopping" "$DESC"
 	do_stop
-	case "$?" in
-		0|1) log_end_msg 0 ;;
-		2)  log_end_msg 1 ;;
-	esac
+	log_end_msg 0
 	;;
   restart|force-reload)
 	log_daemon_msg "Restarting $DESC"

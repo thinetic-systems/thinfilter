@@ -46,7 +46,9 @@ class SessionData(object):
             setattr(self, _var, kwargs[_var])
 
 
-
+#
+# decorator for protected methods
+#
 def islogged(function):
     def new_function(*args, **kwargs):
         username = web.config._session.get('user', '')
@@ -70,7 +72,9 @@ def islogged(function):
 
     return new_function
 
-
+#
+# decorator for template layout methods
+#
 def layout(body='', title='ThinFilter', session=None ):
     render = web.template.render(thinfilter.config.BASE + 'templates/')
     def new_deco(function):
@@ -79,31 +83,33 @@ def layout(body='', title='ThinFilter', session=None ):
             if web.config._session:
                 session=web.config._session
             #lg.debug("layout() session=%s"%(session), __name__)
-            layout = render.layout(title=title, body=body, session=session, menus=get_menus())
+            layout = render.layout(title=title, body=body, session=session, menus=get_menus(), config=thinfilter.config)
             return layout
         
         return new_function
 
     return new_deco
 
-
+#
+# decorator for access rights
+#
 def isinrole(role='', session=None):
     def new_deco(function):
         def new_function(*args, **kwargs):
             if web.config._session:
                 session=web.config._session
             ROLES=web.config._session.get('roles','')
-            lg.debug("isinole() USER ROLES='%s' needed role='%s'"%(ROLES, role), __name__)
+            #lg.debug("isinole() USER ROLES='%s' needed role='%s'"%(ROLES, role), __name__)
             
             if "admin" in ROLES:
-                lg.debug("isinrole() user is admin, return True", __name__)
+                #lg.debug("isinrole() user is admin, return True", __name__)
                 return function(*args, **kwargs)
                 
             elif role in ROLES:
-                lg.debug("isinrole() role found in ROLES, return True", __name__)
+                #lg.debug("isinrole() role found in ROLES, return True", __name__)
                 return function(*args, **kwargs)
             else:
-                lg.debug("isinrole() role not found, return False", __name__)
+                #lg.debug("isinrole() role not found, return False", __name__)
                 raise web.seeother('/403?role=%s'%(role))
             
         return new_function
@@ -149,16 +155,6 @@ def run(cmd, verbose=True, canfail=False, _from=__name__):
         if verbose:
             lg.debug( line.replace('\n', '') , _from)
         result.append( line.replace('\n','') )
-#    
-#    while running:
-#        #print p
-#        if p.poll() != None: running=False
-#        line=p.stdout.readline()
-#        if line.strip() == '': continue
-#        if verbose:
-#            lg.debug( line.replace('\n', '') , _from)
-#        result.append( line.replace('\n','') )
-#    p.wait()
 
     if canfail:
         if p.returncode == 2:
@@ -166,8 +162,13 @@ def run(cmd, verbose=True, canfail=False, _from=__name__):
             #sys.exit(1)
     return result
 
+################################################################################
+
 
 def init_modules(base):
+    """
+    launch init() method in every loaded module
+    """
     for mod in dir(base):
         if mod.startswith("__"): continue
         
@@ -178,7 +179,6 @@ def init_modules(base):
             getattr(obj, 'init')()
         else:
             lg.error("Module '%s' don't have init() method"%mod, __name__)
-            print dir(obj)
 
 
 ################################################################################
@@ -195,6 +195,9 @@ def geturls():
 
 ################################################################################
 class Base(dict):
+    """
+    base class expanding dict object, based on web.Storage object
+    """
     def __getattr__(self, key):
         try:
             return self[key]
@@ -215,7 +218,10 @@ class Base(dict):
 
 ################################################################################
 
-class Menu(web.Storage):
+class Menu(Base):
+    """
+    Menu object with submenus
+    """
     def __init__(self, path="/", name="unknow", submenus=[], order=50, role=''):
         self.name=name
         self.path=path
@@ -301,7 +307,7 @@ def get_menus():
 
 ################################################################################
 
-class Button(web.Storage):
+class Button(Base):
     def __init__(self, path="/", name="unknow", img="/"):
         self.name=name
         self.path=path
@@ -354,3 +360,28 @@ def get_desc(role):
         if role == r[0]:
             return r[1]
     return "desconocido"
+
+################################################################################
+from hashlib import sha1
+import random
+# A simple user object that doesn't store passwords in plain text
+# see http://en.wikipedia.org/wiki/Salt_(cryptography)
+
+class PasswordHash(object):
+    """
+    Compare/generate password with hashed
+    """
+    def __init__(self, password_=None, hash_=None):
+        if password_:
+            self.hash=sha1(password_).hexdigest()
+        elif hash_:
+            self.hash=hash_
+        else:
+            raise "PasswordHash not passed password or hash"
+    def check_password(self, password_):
+        """checks if the password is correct"""
+        return self.hash == sha1(password_).hexdigest()
+    
+    def get(self):
+        return self.hash
+

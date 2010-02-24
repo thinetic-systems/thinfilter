@@ -1,3 +1,4 @@
+#THINFILTER
 #################################################
 # Sample OpenVPN 2.0 config file for            #
 # multi-client server.                          #

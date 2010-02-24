@@ -22,10 +22,13 @@
 # 02111-1307, USA.
 ###########################################################################
 
+import sys
 import logging
 import thinfilter.config
 
 loglevel=logging.INFO
+#if not thinfilter.config.daemon:
+#    loglevel=0
 
 if thinfilter.config.debug:
     loglevel=0
@@ -37,48 +40,96 @@ logging.basicConfig(level=loglevel,
                     filemode='a')
 __logger=logging.getLogger()
 
-def setloglevel():
-    global loglevel
-    if thinfilter.config.debug:
-        loglevel=logging.DEBUG
-    __logger.setLevel(loglevel)
-    
-
 
 def debug(txt, name=thinfilter.config.name):
-    if thinfilter.config.daemon:
-        setloglevel()
-        logging.debug("%s:: %s" % (name, txt))
-    elif thinfilter.config.debug:
+    if thinfilter.config.debug:
         print "D:%s => %s" % (name, txt)
+    else:
+        #setloglevel()
+        __logger.debug("%s:: %s" % (name, txt))
 
 def log(txt, name=thinfilter.config.name):
     debug(txt, name)
 
 def info(txt, name=thinfilter.config.name):
-    if thinfilter.config.daemon:
-        logging.info("%s:: %s" % (name, txt))
-    elif thinfilter.config.debug:
+    if thinfilter.config.debug:
         print "I:%s => %s" % (name, txt)
+    else:
+        __logger.info("%s:: %s" % (name, txt))
+
+def logweb(txt):
+    if thinfilter.config.debug:
+        print txt
+    else:
+        __logger.info(txt)
 
 def warning(txt, name=thinfilter.config.name):
-    if thinfilter.config.daemon:
-        logging.warning("%s:: %s" %(name, txt))
-    else:
+    if thinfilter.config.debug:
         print "W:%s => %s" % (name, txt)
+    else:
+        __logger.warning("%s:: %s" %(name, txt))
 
 def error(txt, name=thinfilter.config.name):
-    if thinfilter.config.daemon:
-        logging.error("%s:: %s" %(name, txt))
-    else:
+    if thinfilter.config.debug:
         print "***ERROR**** %s => %s" % (name, txt)
+    else:
+        __logger.error("%s:: %s" %(name, txt))
 
 class stderr(object):
+    def __init__(self):
+        warning("stderr::__init__")
     def write(self, data):
         if data == '\n': return
         warning(data.replace('\n\n','\n'), "STDERR")
+    def close(self):
+        pass
 
 class stdout(object):
+    def __init__(self):
+        warning("stdout::__init__")
     def write(self, data):
         if data == '\n': return
         warning(data.replace('\n\n','\n'), "STDOUT")
+    def close(self):
+        pass
+
+
+class LogThinFilter:
+    """WSGI middleware for logging the status."""
+    def __init__(self, app):
+        self.app = app
+        self.format = '%s - - [%s] "%s %s %s" - %s'
+    
+        from BaseHTTPServer import BaseHTTPRequestHandler
+        import StringIO
+        f = StringIO.StringIO()
+        
+        class FakeSocket:
+            def makefile(self, *a):
+                return f
+        
+        # take log_date_time_string method from BaseHTTPRequestHandler
+        self.log_date_time_string = BaseHTTPRequestHandler(FakeSocket(), None, None).log_date_time_string
+        
+    def __call__(self, environ, start_response):
+        def xstart_response(status, response_headers, *args):
+            out = start_response(status, response_headers, *args)
+            self.log(status, environ)
+            return out
+
+        return self.app(environ, xstart_response)
+             
+    def log(self, status, environ):
+        import web
+        outfile = environ.get('wsgi.errors', web.debug)
+        req = environ.get('PATH_INFO', '_')
+        protocol = environ.get('ACTUAL_SERVER_PROTOCOL', '-')
+        method = environ.get('REQUEST_METHOD', '-')
+        host = "%s:%s" % (environ.get('REMOTE_ADDR','-'), 
+                          environ.get('REMOTE_PORT','-'))
+
+        time = self.log_date_time_string()
+
+        msg = self.format % (host, time, protocol, method, req, status)
+        #print >> outfile, utils.safestr(msg)
+        logweb('%s - - "%s %s %s" - %s'%(host, protocol, method, req, status))

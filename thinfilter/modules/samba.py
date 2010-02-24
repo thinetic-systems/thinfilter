@@ -362,7 +362,7 @@ class Shares(thinfilter.common.Base):
         
         # add system user
         if not self.user_exists(username):
-            cmd="useradd -s /bin/false -u %s -M -d /var/lib/samba/shares -g sambashare %s"%(self.get_last_uid(), username)
+            cmd="useradd -s /bin/false -u %s -d /var/lib/samba/shares -g sambashare %s"%(self.get_last_uid(), username)
             thinfilter.common.run(cmd, verbose=True, _from=__name__)
         
         cmd="echo %s:%s | chpasswd"%(username, userobj['password'])
@@ -460,6 +460,8 @@ class samba(object):
         sobj=Shares()
         formdata=web.input()
         lg.debug("samba()::main::formdata=%s"%formdata, __name__)
+        if thinfilter.config.demo:
+            return web.seeother('/shares?error=ERROR:Modo%20demo')
         try:
             if not sobj.change_workgroup( str(formdata['global|workgroup']) ):
                 return web.seeother('/shares?error=Grupo%20incorrecto')
@@ -516,6 +518,9 @@ class shares(object):
         formdata=web.input()
         lg.debug("samba()::shares()::formdata=%s"%formdata, __name__)
         
+        if thinfilter.config.demo:
+            return web.seeother('/shares/share/?error=ERROR:Modo%20demo')
+        
         action=options.split('/')
         if action[0] == "share":
             # save share
@@ -563,18 +568,7 @@ def init():
     else:
         lg.info("samba not found, disabling it", __name__)
 
-if __name__ == "__main__":
-    thinfilter.config.daemon=False
-    thinfilter.config.debug=True
-    
-    app = Shares()
-    #app.varsobj['compartido']={'comment':'Compartido', 'path':'/var/lib/samba/shares/compartido', 'browseable':'yes', 'read only': 'no'}
-    #app.varsobj.pop('compartido')
-    #print app.varsobj
-    #app.save()
-    #print app.get_users()
-    #print app.read_share('lala')
-    print app.get_last_uid()
+
 
 
 

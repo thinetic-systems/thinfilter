@@ -1,0 +1,103 @@
+$def with (data, action='Guardar')
+
+<script>
+function showPopup(){
+  $$('#hideshow')[0].style.visibility = 'visible';
+}
+function showHelp(of){
+  hideHelp();
+  $$('#help')[0].style.visibility = 'visible';
+  $$('#helpdiv')[0].innerHTML=$$('#'+of+'')[0].innerHTML;
+}
+function hideHelp(){
+  $$('#help')[0].style.visibility = 'hidden';
+}
+</script>
+<h1 class="clear">Desbloquear</h1>
+
+<h3>$:data.htmlurl</h3>
+
+<form method="post" action="/stop/admin/unblock" onsubmit="javascript:showPopup();">
+<table id="settings">
+
+$if data.done == '1':
+    <h1 class="error">Guardado</h1>
+
+<tr>
+    <td>Desbloquear URL completa</a></td>
+    
+    <td>
+    <input type="radio" name='unblock' id="unblock" value="url" checked="checked">
+    <input type="text" name="url" id="url" value="$data.url" size="50">
+    </td>
+</tr>
+
+
+$if data.subdomain:
+    <tr>
+        <td>Desbloquear subdominio</a></td>
+        
+        <td>
+        <input type="radio" name='unblock' id="unblock" value="subdomain">
+        <input type="text" name="subdomain" id="subdomain" value="$data.subdomain" size="50">
+        </td>
+    </tr>
+
+
+<tr>
+    <td>Desbloquear dominio</a></td>
+    
+    <td>
+    <input type="radio" name='unblock' id="unblock" value="domain">
+    <input type="text" name="domain" id="domain" value="$data.domain" size="50">
+    </td>
+</tr>
+
+
+<tr>
+    <td>Desbloquear expresión</a></td>
+    
+    <td>
+    <input type="radio" name='unblock' id="unblock" value="expression">
+    <input type="text" name="expression" id="expression" value='$data.reason.expressions' size="50">
+    </td>
+</tr>
+<tr><td colspan="2"><hr></td></tr>
+
+
+<tr>
+    <td>Durante</a></td>
+    
+    <td>
+    <input type="radio" name='timeout' id="timeout" value="30m" checked="checked">30 minutos<br/>
+    <input type="radio" name='timeout' id="timeout" value="1h">1 hora<br/>
+    <input type="radio" name='timeout' id="timeout" value="2h">2 horas<br/>
+    <input type="radio" name='timeout' id="timeout" value="1d">1 día<br/>
+    <input type="radio" name='timeout' id="timeout" value="all">siempre<br/>
+    </td>
+</tr>
+<tr><td colspan="2"><hr></td></tr>
+
+
+<tr>
+    <td>&nbsp;</td>
+    <td>
+        <input type="hidden" id="rulename" name="rulename" value="$data.rule">
+        <input type="hidden" id="url" name="url" value="$data.url">
+        <input type="submit" id="$action" value="$action">
+    </td>
+</tr>
+</table>
+</form>
+
+
+<div id="hideshow" style="visibility:hidden;">
+	<div class="popup_block">
+		<div class="popup txtcenter">
+			<h3>Aplicando cambios...</h3>
+			(puede tardar un poco)<br/>
+			<img src="/data/loading.gif">
+		</div>
+	</div>
+</div>
+

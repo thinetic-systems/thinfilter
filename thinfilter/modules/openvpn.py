@@ -42,12 +42,12 @@ import web
 render = web.template.render(thinfilter.config.BASE + 'templates/')
 
 """
-  396  . ./vars 
-  397  ./clean-all 
-  398  ./build-ca 
-  409  ./build-key-server server
-  412  ./build-key cliente1
-  425  openssl dhparam -out dh1024.pem 1024
+   ./vars 
+   ./clean-all 
+   ./build-ca 
+   ./build-key-server server
+   ./build-key cliente1
+  openssl dhparam -out dh1024.pem 1024
   KEY_EMAIL="xxx@xxx" PASSIN="xxx" PASSOUT="xxxxx" ./build-key-pass
 
 # show info
@@ -57,8 +57,8 @@ openssl x509 -text -in etc_openvpn/keys/server.crt | grep "Subject:"
 OPENVPN_DIR="/etc/openvpn"
 #delete this
 if thinfilter.config.devel:
-    lg.debug("openvpn devel active", __name__ )
-    OPENVPN_DIR="openvpn"
+    #lg.debug("openvpn devel active", __name__ )
+    OPENVPN_DIR="./openvpn"
 
 def file_exists(fname):
     absfile=os.path.join(OPENVPN_DIR, fname)
@@ -239,13 +239,13 @@ class OpenVpn(object):
     def run(self):
         out=thinfilter.common.run("/etc/init.d/openvpn restart", verbose=False, _from=__name__)
         for line in out:
-            print line
+            lg.debug(line, __name__)
 
     def reset(self):
         cmd="%s/scripts/init-openvpn.sh only"%(OPENVPN_DIR)
         out=thinfilter.common.run(cmd, verbose=False, _from=__name__)
         for line in out:
-            print line
+            lg.debug(line, __name__)
 
 class FileLoader(object):
     def __init__(self, fname):
@@ -254,7 +254,7 @@ class FileLoader(object):
         self.raw=[]
         self.__load()
     def __load(self):
-        print "OPENVPN_DIR='%s' fname='%s'"%(OPENVPN_DIR, self.fname)
+        lg.debug("OPENVPN_DIR='%s' fname='%s'"%(OPENVPN_DIR, self.fname), __name__)
         if not os.path.isfile( os.path.join(OPENVPN_DIR, self.fname) ):
             return
         f=open( os.path.join(OPENVPN_DIR, self.fname), 'r' )
@@ -281,7 +281,7 @@ class FileVars(FileLoader):
         return data
     
     def save(self, data):
-        print data
+        lg.debug("FileVars()::save(%s)"%data, __name__)
         f=open( os.path.join(OPENVPN_DIR, self.fname), 'w' )
         for line in self.raw:
             key=None
@@ -319,7 +319,7 @@ class vpn(object):
         else:
             running=False
         conf=FileServer().get()
-        print conf
+        lg.debug(conf, __name__)
         return render.vpn(openvpn_vars, running, conf, 'Guardar')
 
     @thinfilter.common.islogged
@@ -327,20 +327,21 @@ class vpn(object):
     def POST(self):
         openvpn_vars=FileVars().get()
         formdata=web.input()
-        print openvpn_vars
-        print formdata
+        lg.debug(openvpn_vars, __name__)
+        lg.debug(formdata, __name__)
         for key in openvpn_vars:
             if formdata.has_key(key):
                 openvpn_vars[key]=formdata[key]
-        # save data
-        FileVars().save(openvpn_vars)
-        # create certs
-        OpenVpn().genCA()
-        OpenVpn().genDH()
-        OpenVpn().genServer()
-        OpenVpn().genCRL()
-        # run vpn
-        OpenVpn().run()
+        if not thinfilter.config.demo:
+            # save data
+            FileVars().save(openvpn_vars)
+            # create certs
+            OpenVpn().genCA()
+            OpenVpn().genDH()
+            OpenVpn().genServer()
+            OpenVpn().genCRL()
+            # run vpn
+            OpenVpn().run()
         return web.seeother('/vpn')
 
 class restart(object):
@@ -348,7 +349,8 @@ class restart(object):
     @thinfilter.common.isinrole('openvpn.restart')
     @thinfilter.common.layout(body='', title='Configuración de OpenVPN')
     def GET(self, options=None):
-        OpenVpn().run()
+        if not thinfilter.config.demo:
+            OpenVpn().run()
         return web.seeother('/vpn')
 
 class reset(object):
@@ -356,7 +358,8 @@ class reset(object):
     @thinfilter.common.isinrole('openvpn.restart')
     @thinfilter.common.layout(body='', title='Configuración de OpenVPN')
     def GET(self, options=None):
-        OpenVpn().reset()
+        if not thinfilter.config.demo:
+            OpenVpn().reset()
         return web.seeother('/vpn')
 
 class getUsers(object):
@@ -386,30 +389,19 @@ class users(object):
 
     @thinfilter.common.islogged
     def POST(self):
+        #FIXME
         return web.seeother('/vpn/users')
 
 
 def init():
     # nothing to check
     lg.debug("openvpn::init()", __name__)
-    """
-        '/vpn',       'vpn',
-        '/vpn/users', 'users',
-    """
+    
     thinfilter.common.register_url('/vpn',    'thinfilter.modules.openvpn.vpn')
     thinfilter.common.register_url('/vpn/restart',  'thinfilter.modules.openvpn.restart')
     thinfilter.common.register_url('/vpn/reset',  'thinfilter.modules.openvpn.reset')
     thinfilter.common.register_url('/vpn/users',  'thinfilter.modules.openvpn.users')
     
-    """
-    <li><span class="dir">VPN</span>
-        <ul>
-            <li><a href="/vpn">Configuración</a></li>
-            <li><a href="/vpn/users">Usuarios</a></li>
-            <li><a href="/vpn/remote">Tunel</a></li>
-        </ul>
-    </li>
-    """
     menu=thinfilter.common.Menu("", "VPN")
     menu.appendSubmenu("/vpn", "Configuración", role='openvpn.vpn')
     menu.appendSubmenu("/vpn/users", "Usuarios", role='openvpn.users')
@@ -419,37 +411,6 @@ def init():
     thinfilter.common.register_role_desc('openvpn.vpn', "Configurar servidor VPN")
     thinfilter.common.register_role_desc('openvpn.users', "Administrar usuarios VPN")
     thinfilter.common.register_role_desc('openvpn.restart', "Reiniciar servidor VPN")
-
-
-if __name__ == "__main__":
-    thinfilter.config.daemon=False
-    thinfilter.config.debug=True
-    OPENVPN_DIR="openvpn"
-    
-#    print "CA     ", OpenVpn().genCA()
-#    print "DH     ", OpenVpn().genDH()
-#    print "server ", OpenVpn().genServer()
-#    print "CRL    ", OpenVpn().genCRL()
-#    
-#    print "adduser ", OpenVpn().genClient('mario.izquierdo', 'mario@thinetic.es', 'pass')
-#    print OpenVpn().getUser('mario.izquierdo')
-#    print "adduser ", OpenVpn().genClient('mario.izquierdo2', 'mario@thinetic.es', 'pass')
-    
-    #print OpenVpn().getRevoked()
-    
-    #print OpenVpn().revokeClient('mario.izquierdo')
-    #print OpenVpn().getUser('mario.izquierdo')
-    #print OpenVpn().revokeClient('mario.izquierdo4')
-    #print OpenVpn().revokeClient('mario.izquierdo5')
-    #print OpenVpn().genClient('mario', 'mario@thinetic.es', 'prueba1')
-    #print OpenVpn().revokeClient('mario')
-
-    
-    #print FileLoader("vars").get()
-    #print FileVars().get()
-    print FileServer().get()
-
-    #print getUsers().get()
 
 
 
