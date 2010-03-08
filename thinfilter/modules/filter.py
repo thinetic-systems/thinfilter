@@ -42,10 +42,6 @@ import thinfilter.squidguard
 import web
 render = web.template.render(thinfilter.config.BASE + 'templates/')
 
-EDIT_RULES=['lista-blanca', 'lista-negra']
-FILES=['domains', 'urls', 'expressions']
-PATH="/usr/share/squidGuard/db/"
-SQUIDGUARD_CONF="/etc/squid3/squidGuard.conf"
 SQUIDGUARD_ALLRULES=["servidor", "lista-blanca", "!lista-negra", 
                      "!drugs", "!aggressive", "!hacking", "!proxy",
                      "!mail", "!warez","!violence","!porn","!audio-video",
@@ -89,6 +85,10 @@ class InfoScreen(thinfilter.common.Base):
         self.__set('targetclass')
         self.__set('src')
         
+        if self.targetclass == 'ads':
+            return
+        
+        
         try:
             # encode && decode to safe base64 encoding
             self.urlbase64=base64.urlsafe_b64encode(unicode(self.url).encode("utf-8")).encode("utf-8")
@@ -96,6 +96,12 @@ class InfoScreen(thinfilter.common.Base):
             pass
         
         del(self.formdata)
+        
+        if self.targetclass == 'porn':
+            # catid contenido adulto
+            self.info=self.get_catdesc(3, '')
+            self.reason=encode(self.reason)
+            return
         
         try:
             self.__load()
@@ -174,11 +180,14 @@ class FormData(thinfilter.common.Base):
         
     def __init__(self, data):
         self.url='desconocida'
-        self.src='10.0.0.1:9090'
+        self.src='%s:%s'%(thinfilter.config.WEB_IP, thinfilter.config.WEB_PORT)
         try:
             self.__load(data)
         except:
             pass
+        # forceip
+        if thinfilter.config.FORCE_IP != "":
+            self.src='%s:%s'%(thinfilter.config.WEB_IP, thinfilter.config.WEB_PORT)
 
     def __load(self, data):
         __data=data['src'].split()
@@ -199,14 +208,17 @@ class FormData(thinfilter.common.Base):
 class stop(object):
     def GET(self, options=None):
         formdata=web.input()
-        # redirect http://10.0.0.1:9090/stop?src=10.0.0.1:9090+addr=%a+clientname=%n+clientident=%i+srcclass=%s+targetclass=%t+url=%u
-        # <Storage {'src': u'10.0.0.1:9090 addr=10.0.0.2 clientname= clientident= srcclass=default targetclass=lista-negra url=http://images.google.es/images?hl=es', 'aq': u'f', 'btnG': None, 'gbv': u'1', 'source': u'hp', 'q': u'porn', 'ie': u'ISO-8859-1', 'oq': u''}>
+        # redirect http://SERVER_IP:WEB_PORT/stop?src=SERVER_IP:WEB_PORT+addr=%a+clientname=%n+clientident=%i+srcclass=%s+targetclass=%t+url=%u
+        # <Storage {'src': u'SERVER_IP:WEB_PORT addr=CLIENT_IP clientname= clientident= srcclass=default targetclass=lista-negra url=http://images.google.es/images?hl=es', 'aq': u'f', 'btnG': None, 'gbv': u'1', 'source': u'hp', 'q': u'porn', 'ie': u'ISO-8859-1', 'oq': u''}>
         data=FormData(formdata)
         
         #print formdata
         #if not formdata.has_key('url'):
         #    formdata.url='desconocida'
         screen=InfoScreen(data)
+        # ads don't return block screen, simple return empty web
+        if screen.targetclass == 'ads':
+            return "ads blocked"
         #print screen
         return render.stop(screen, 'Guardar')
 
@@ -217,14 +229,14 @@ class Rules(thinfilter.common.Base):
         return '<Filter::Rules ' + dict.__repr__(self) + '>'
     
     def __init__(self, formdata=None):
-        self.editable=EDIT_RULES
+        self.editable=thinfilter.config.SQUIDGUARD_EDIT_RULES
         self.rules=[]
         self.rulecontent={}
         self.rulename=''
         self.squidguard=self.__load_squidGuard()
-        for path in glob.glob(PATH + "*"):
+        for path in glob.glob(thinfilter.config.SQUIDGUARD_PATH + "*"):
             if os.path.isdir(path):
-                if not os.path.basename(path) in EDIT_RULES and not os.path.basename(path) == 'servidor':
+                if not os.path.basename(path) in thinfilter.config.SQUIDGUARD_EDIT_RULES and not os.path.basename(path) == 'servidor':
                     self.rules.append( os.path.basename(path) )
         #print self.rules
         if formdata and formdata.has_key('rule'):
@@ -233,10 +245,10 @@ class Rules(thinfilter.common.Base):
             self.rulename=formdata.rule
         
     def __load(self, rule):
-        path=os.path.join(PATH, rule)
+        path=os.path.join(thinfilter.config.SQUIDGUARD_PATH, rule)
         # load domains expressions and urls
         self.rulecontent[rule]={}
-        for f in FILES:
+        for f in thinfilter.config.SQUIDGUARD_FILES:
             self.rulecontent[rule][f]=self.__load_file(os.path.join(path, f))
 
     def __load_file(self, fname):
@@ -253,8 +265,8 @@ class Rules(thinfilter.common.Base):
 
 
     def save(self, formdata):
-        path=os.path.join(PATH, formdata.rulename)
-        for f in FILES:
+        path=os.path.join(thinfilter.config.SQUIDGUARD_PATH, formdata.rulename)
+        for f in thinfilter.config.SQUIDGUARD_FILES:
             self.__save_file(os.path.join(path, f), formdata[f])
 
 
@@ -265,9 +277,9 @@ class Rules(thinfilter.common.Base):
         f.close()
 
     def reloadSquid(self):
-        thinfilter.common.run("squidGuard -c %s -C all"%SQUIDGUARD_CONF, verbose=True, _from=__name__)
-        thinfilter.common.run("squidGuard -c %s -u"%SQUIDGUARD_CONF, verbose=True, _from=__name__)
-        thinfilter.common.run("chown -R proxy:proxy %s"%PATH, verbose=True, _from=__name__)
+        thinfilter.common.run("squidGuard -c %s -C all"%thinfilter.config.SQUIDGUARD_CONF, verbose=True, _from=__name__)
+        #thinfilter.common.run("squidGuard -c %s -u"%thinfilter.config.SQUIDGUARD_CONF, verbose=True, _from=__name__)
+        thinfilter.common.run("chown -R proxy:proxy %s"%thinfilter.config.SQUIDGUARD_PATH, verbose=True, _from=__name__)
         thinfilter.common.run("chown -R proxy:proxy /var/log/squid3/*", verbose=True, _from=__name__)
         thinfilter.common.run("squid3 -k reconfigure || /etc/init.d/squid3 restart", verbose=True, _from=__name__)
         
@@ -279,9 +291,9 @@ class Rules(thinfilter.common.Base):
         """
         data=""
         rules={'blocked':[], 'pass':[]}
-        if not os.path.isfile(SQUIDGUARD_CONF):
+        if not os.path.isfile(thinfilter.config.SQUIDGUARD_CONF):
             return rules
-        f=open(SQUIDGUARD_CONF, 'r')
+        f=open(thinfilter.config.SQUIDGUARD_CONF, 'r')
         for line in f.readlines():
             if line.strip().startswith('pass '):
                 data=line.strip().split()
@@ -314,6 +326,9 @@ class admin(object):
     @thinfilter.common.isinrole('filter.admin')
     def POST(self):
         formdata=web.input()
+        #FIXME
+        print formdata
+        return web.seeother('/stop/admin')
         if not thinfilter.config.demo:
             rules=Rules().saveSquidGuard(formdata)
         return web.seeother('/stop/admin')
@@ -342,6 +357,30 @@ class edit(object):
         formdata=web.input()
         a=thinfilter.squidguard.squidGuard()
         x=a.getid(formdata.id)
+        print formdata
+        print x
+        ############# borrar #################
+        if formdata.accion == 'borrar':
+            if x is None:
+                # trying to delete new row
+                return "ok"
+            elif x.delete(restart=True):
+                return "ok"
+            else:
+                return "error borrando registro"
+        ######################################
+        ################ nuevo registro #################
+        if formdata.accion == 'guardar' and x is None:
+            """
+            accion=guardar&text=facebook.com&filtertype=domains&mode=lista-negra&category=2&id=7
+            """
+            row=thinfilter.squidguard.Row(text=formdata.text, filtertype=formdata.filtertype, mode=formdata.mode, category=formdata.category)
+            if not row.new(formdata, restart=True):
+                return "error guardando nuevo registro"
+            return "ok"
+        ###############################################
+        
+        ################  actualizar ###################
         if not thinfilter.config.demo:
             result=x.save(formdata)
         else:
@@ -356,7 +395,7 @@ class TestFilter(thinfilter.common.Base):
         self.url=formdata.url
         self.blocked=False
         self.reason=''
-        out=thinfilter.common.run("echo '%s 10.0.0.1 - GET' | squidGuard -c %s 2>&1" %(self.url, SQUIDGUARD_CONF), verbose=True, _from=__name__)
+        out=thinfilter.common.run("echo '%s %s - GET' | squidGuard -c %s 2>&1" %(self.url, thinfilter.config.WEB_IP, thinfilter.config.SQUIDGUARD_CONF), verbose=True, _from=__name__)
         for line in out:
             if "stop?src" in line:
                 self.blocked=True
@@ -376,7 +415,7 @@ class test(object):
     def POST(self):
         """
         call this command
-        echo "$URL 10.0.0.1 - GET" | squidGuard -c /etc/squid3/squidGuard.conf
+        echo "$URL SERVER_IP - GET" | squidGuard -c /etc/squid3/squidGuard.conf
         
         @result = empty no blocked
                 = not empty retunr 2 line, redirect ULR and original call
@@ -402,7 +441,10 @@ class UnblockFilter(thinfilter.common.Base):
         
         self.reason=Reason()
         if formdata.has_key('reason'):
-            self.reason=decode(formdata.reason)
+            try:
+                self.reason=decode(formdata.reason)
+            except:
+                pass
         
         if self.reason.expressions != '':
             c=re.search(self.reason.expressions, self.url)
@@ -436,8 +478,16 @@ class unblock(object):
     @thinfilter.common.isinrole('filter.unblock')
     def POST(self):
         formdata=web.input()
-        lg.debug(formdata, __name__)
+        #lg.debug(formdata, __name__)
         #FIXME
+        newrule=thinfilter.squidguard.Row()
+        # add to lista-blanca
+        newrule.mode='lista-blanca'
+        newrule.new(formdata)
+        # reloadsquid
+        sq=thinfilter.squidguard.squidGuard()
+        sq.saveAndReload()
+        #return form
         return web.seeother('/stop/admin/unblock?done=1&rule=%s&url=%s'%(formdata.rulename, formdata.url))
 
 ################################################################################
@@ -496,7 +546,8 @@ def init():
     
     
     menu=thinfilter.common.Menu("", "Filtros", order=60)
-    menu.appendSubmenu("/stop?src=10.0.0.1:9090+addr=+clientname=+clientident=+srcclass=+targetclass=lista-negra+url=http://url.de.ejemplo/index.html", "Ver pantalla", role='filter.admin')
+    ip_port="%s:%s"%(thinfilter.config.WEB_IP, thinfilter.config.WEB_PORT)
+    menu.appendSubmenu("/stop?src=%s+addr=+clientname=+clientident=+srcclass=+targetclass=lista-negra+url=http://url.de.ejemplo/index.html"%(ip_port), "Ver pantalla", role='filter.admin')
     menu.appendSubmenu("/stop/admin", "Configurar filtros", role='filter.admin')
     menu.appendSubmenu("/stop/admin/categories", "Categorías", role='filter.admin')
     menu.appendSubmenu("/stop/admin/test", "Probar filtros", role='filter.admin')
@@ -504,7 +555,11 @@ def init():
     
     thinfilter.common.register_role_desc('filter.admin', "Configurar pantalla de bloqueo")
     thinfilter.common.register_role_desc('filter.unblock', "Añadir/desbloquear reglas")
-    #FIXME in init() generate/load rules to/from squidGuard/db files
-    app=Rules()
+    
+    
+    #sq=thinfilter.squidguard.squidGuard()
+    #sq.saveAndReload()
+    thinfilter.squidguard.reloadSquid()
+    lg.debug("filter::end init()")
 
 

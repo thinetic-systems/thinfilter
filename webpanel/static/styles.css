@@ -5,6 +5,10 @@ body {
     font-size: 1.1em;
 }
 
+#settings img {
+    border:0;
+}
+
 /* for debug */
 /*
 div,h1,h2,h3{

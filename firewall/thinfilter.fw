@@ -38,7 +38,7 @@ $IPTABLES -P OUTPUT ACCEPT
 $IPTABLES -P FORWARD ACCEPT
 
 if [ "$1" = "off" ]; then
-  echo " * Firewall clean."
+  echo -n " firewall stopped "
   exit 0
 fi
 
@@ -130,8 +130,10 @@ for IP in $NOPROXY; do
   for portname in $NOPROXY_PORTS; do
     ports=$(get_port_number "$portname")
     for p in $ports; do
-      $IPTABLES -A FORWARD -s $IP -i $LAN -p all --dport $p -j ACCEPT
-      $IPTABLES -A FORWARD -d $IP -o $LAN -p all --sport $p -j ACCEPT
+      $IPTABLES -A FORWARD -s $IP -i $LAN -p tcp --dport $p -j ACCEPT
+      $IPTABLES -A FORWARD -d $IP -o $LAN -p udp --sport $p -j ACCEPT
+      $IPTABLES -A FORWARD -s $IP -i $LAN -p tcp --dport $p -j ACCEPT
+      $IPTABLES -A FORWARD -d $IP -o $LAN -p udp --sport $p -j ACCEPT
     done
   done
 done
@@ -155,8 +157,10 @@ for portname in $ALL_OPEN_PORTS; do
 
   else
     for p in $ports; do
-      $IPTABLES -A FORWARD -i $LAN -p all --dport $p -j ACCEPT
-      $IPTABLES -A FORWARD -o $LAN -p all --sport $p -j ACCEPT
+      $IPTABLES -A FORWARD -i $LAN -p tcp --dport $p -j ACCEPT
+      $IPTABLES -A FORWARD -o $LAN -p tcp --sport $p -j ACCEPT
+      $IPTABLES -A FORWARD -i $LAN -p udp --dport $p -j ACCEPT
+      $IPTABLES -A FORWARD -o $LAN -p udp --sport $p -j ACCEPT
     done
 
   fi
@@ -198,4 +202,4 @@ fi
 
 
 
-echo " * Firewall active..."
+echo -n " firewall active"

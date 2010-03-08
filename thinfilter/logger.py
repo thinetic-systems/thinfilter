@@ -57,9 +57,9 @@ def info(txt, name=thinfilter.config.name):
     else:
         __logger.info("%s:: %s" % (name, txt))
 
-def logweb(txt):
+def logweb(txt, time=''):
     if thinfilter.config.debug:
-        print txt
+        print "%s %s"%(time, txt)
     else:
         __logger.info(txt)
 
@@ -132,4 +132,4 @@ class LogThinFilter:
 
         msg = self.format % (host, time, protocol, method, req, status)
         #print >> outfile, utils.safestr(msg)
-        logweb('%s - - "%s %s %s" - %s'%(host, protocol, method, req, status))
+        logweb('%s - - "%s %s %s" - %s'%(host, protocol, method, req, status), time)

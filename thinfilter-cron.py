@@ -24,6 +24,7 @@
 ###########################################################################
 
 import sys
+import thinfilter
 import thinfilter.config
 if "debug" in sys.argv:
     thinfilter.config.debug=True
@@ -31,24 +32,45 @@ if "debug" in sys.argv:
 
 import thinfilter.statcreator
 import netifaces
+import thinfilter.squidguard
+import thinfilter.logger as lg
+
+class Cron(object):
+    def __init__(self):
+        pass
+
+
+    def update_net(self):
+        for net in netifaces.interfaces():
+            if net in thinfilter.config.HIDDEN_INTERFACES:
+                continue
+            app=thinfilter.statcreator.Net(iface=net)
+            app.update()
+
+    def update_cpu(self):
+        app=thinfilter.statcreator.CPU()
+        app.update()
+
+
+    def expireRules(self):
+        needReload=False
+        sq=thinfilter.squidguard.squidGuard()
+        for rule in sq.all:
+            #print "%s %s" %(rule.id, rule.expire)
+            if rule.expire.expired:
+                lg.info("expireRules() id=%s expired, deleting ..."%(rule.id), "thinfilter-cron")
+                rule.delete()
+                needReload=True
+        
+        if needReload:
+            thinfilter.squidguard.reloadSquid()
+        else:
+            lg.info("expireRules() no rules expired", "thinfilter-cron")
 
 
 
 if __name__ == "__main__":
-    update=True
-    graph=False
-    
-    if "graph" in sys.argv:
-        graph=True
-    
-    for net in netifaces.interfaces():
-        if net in thinfilter.config.HIDDEN_INTERFACES:
-            continue
-        app=thinfilter.statcreator.Net(iface=net)
-        if update: app.update()
-        if graph:  app.graph()
-    
-    
-    app=thinfilter.statcreator.CPU()
-    if update: app.update()
-    if graph:  app.graph()
+    app=Cron()
+    app.update_net()
+    app.update_cpu()
+    app.expireRules()

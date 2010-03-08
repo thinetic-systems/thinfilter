@@ -31,27 +31,13 @@ import os
 
 import thinfilter.logger as lg
 import thinfilter.config
+import thinfilter.common
 
 import web
 import time
 
 
-# from /usr/lib/python2.5/BaseHTTPServer.py
-def date_time_string(timestamp=None):
-    """Return the current date and time formatted for a message header."""
-    weekdayname = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
-    monthname = [None,
-                 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    if timestamp is None:
-        timestamp = time.time()
-    year, month, day, hh, mm, ss, wd, y, z = time.gmtime(timestamp)
-    s = "%s, %02d %3s %4d %02d:%02d:%02d GMT" % (
-            weekdayname[wd],
-            day, monthname[month], year,
-            hh, mm, ss)
-    return s
 
 
 
@@ -69,8 +55,8 @@ class static:
         # set common headers
         f=open(os.path.join(thinfilter.config.BASE, 'static' , sfile), mode)
         fs = os.fstat( f.fileno())
-        web.header("Expires", date_time_string(time.time()+60*60*2)) # expires in 2 hours
-        web.header("Last-Modified", date_time_string(fs.st_mtime))
+        web.header("Expires", thinfilter.common.date_time_string(time.time()+60*60*2)) # expires in 2 hours
+        web.header("Last-Modified", thinfilter.common.date_time_string(fs.st_mtime))
         web.header("Content-Length", str(fs[6]))
         web.header("Cache-Control", "max-age=3600, must-revalidate") 
         f.close()
@@ -89,8 +75,8 @@ class favicon:
     def GET(self):
         f=open(os.path.join(thinfilter.config.BASE, 'static' , 'favicon.ico'), 'rb')
         fs = os.fstat( f.fileno())
-        web.header("Expires", date_time_string(time.time()+60*60*2)) # expires in 2 hours
-        web.header("Last-Modified", date_time_string(fs.st_mtime))
+        web.header("Expires", thinfilter.common.date_time_string(time.time()+60*60*2)) # expires in 2 hours
+        web.header("Last-Modified", thinfilter.common.date_time_string(fs.st_mtime))
         web.header("Content-Length", str(fs[6]))
         web.header("Cache-Control", "max-age=3600, must-revalidate")
         f.close()

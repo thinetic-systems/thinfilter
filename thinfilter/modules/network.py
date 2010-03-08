@@ -42,85 +42,6 @@ render = web.template.render(thinfilter.config.BASE + 'templates/')
 
 
 
-class Interfaces(object):
-    def __init__(self, **kwargs):
-        self.__GetAllNetworkInterfaces__()
-
-    def get_ip_address(self, ifname):
-        lg.debug("get_ip_address() ifname=%s" %(ifname) , __name__)
-        if not ifname in netifaces.interfaces():
-            return None
-        ip=netifaces.ifaddresses(ifname)
-        if ip.has_key(netifaces.AF_INET):
-            return ip[netifaces.AF_INET][0]['addr']
-        return None
-
-    def __getLink__(self, iface):
-        try:
-            f=open("/sys/class/net/%s/carrier"%iface, 'r')
-        except:
-            lg.error("Can't read /sys/class/net/%s/carrier"%iface, __name__)
-            return False
-        try:
-            link=f.readline().strip()
-        except:
-            lg.error("Can't read /sys/class/net/%s/carrier"%iface, __name__)
-            link=0
-        f.close()
-        if link == "1":
-            return True
-        else:
-            return False
-
-    def __getGateway__(self, iface):
-        data=[]
-        try:
-            f=open("/proc/net/route", 'r')
-        except:
-            lg.error("/proc/net/route is not readable", __name__)
-            return None
-        for l in f.readlines():
-            if l.startswith(iface):
-                tmp=l.strip().split()
-                if tmp[1] == "00000000":
-                    data.append(self.__hex2dec__(tmp[2]))
-                    break
-        f.close()
-        if len(data) < 1:
-            lg.warning("WARNING: iface='%s' no gateway"%iface, __name__)
-            return None
-        else:
-            return data[0]
-
-    def __hex2dec__(self, s):
-        out=[]
-        for i in range(len(s)/2):
-            out.append( str(int(s[i*2:(i*2)+2],16)) )
-        # data in /proc/net/route is reversed
-        out.reverse()
-        return ".".join(out)
-
-    def __GetAllNetworkInterfaces__(self):
-        self.allnetworkinterfaces=[]
-        for dev in netifaces.interfaces():
-            if not dev in thinfilter.config.HIDDEN_INTERFACES:
-                ip=netifaces.ifaddresses(dev)
-                if ip.has_key(netifaces.AF_INET):
-                    data=ip[netifaces.AF_INET][0]
-                    data['iface']=dev
-                    data['gateway']=self.__getGateway__(dev)
-                    if not data['gateway']:
-                        data['readonly']="readonly"
-                    else:
-                        data['readonly']=""
-                    data['link']=self.__getLink__(dev)
-                    self.allnetworkinterfaces.append(data)
-        #lg.debug ( "Interfaces::GetAllNetworkInterfaces() %s" %( self.allnetworkinterfaces ), __name__ )
-        return self.allnetworkinterfaces
-
-    def get(self):
-        lg.debug ( "Interfaces::get() %s" %( self.allnetworkinterfaces ), __name__ )
-        return self.allnetworkinterfaces
 
 class network(object):
     @thinfilter.common.islogged
@@ -128,13 +49,13 @@ class network(object):
     @thinfilter.common.layout(body='', title='Configuración Red')
     def GET(self, options=None):
         lg.debug("network::GET() options=%s" %options, __name__)
-        ifaces=Interfaces().get()
+        ifaces=thinfilter.common.Interfaces().get()
         return render.settings_net(ifaces, action='Guardar')
 
     @thinfilter.common.islogged
     @thinfilter.common.isinrole('network.network')
     def POST(self):
-        ifaces=Interfaces().get()
+        ifaces=thinfilter.common.Interfaces().get()
         formdata=web.input()
         lg.debug("formdata=%s"%formdata, __name__)
         for i in range(len(ifaces)):
@@ -215,7 +136,7 @@ class DnsMasq(object):
         f.close()
         # save /etc/resolv.conf
         f=open("/etc/resolv.conf", 'w')
-        f.write("nameserver 10.0.0.1\n")
+        f.write("nameserver %s\n"%(thinfilter.config.WEB_IP))
         for dns in self.dns.strip().split(','):
             f.write("nameserver %s\n" %(dns) )
         f.close()
@@ -251,7 +172,7 @@ class dhcp(object):
 class netStats(object):
     def __init__(self):
         self.ifaces=[]
-        for dev in Interfaces().get():
+        for dev in thinfilter.common.Interfaces().get():
             if not dev['iface'] in thinfilter.config.HIDDEN_INTERFACES:
                 tx_and_rx=self.__get_data__(dev)
                 

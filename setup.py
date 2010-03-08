@@ -35,11 +35,9 @@ def get_recursive(ipath, dest, exclude=None):
             fileList.append( (os.path.join(dest,root) ,[os.path.join(root,f)]) )
     return fileList
 
-
+# webpanel static and templates data
 data_files.append(('share/thinfilter/webpanel/static', get_files("webpanel/static") ))
 data_files.append(('share/thinfilter/webpanel/templates', get_files("webpanel/templates") ))
-#for f in get_recursive("webpanel/", 'share/thinfilter/'):
-#    data_files.append(f)
 
 # openvpn easy-rsa2.0
 for f in get_recursive("openvpn/", "/etc/"):
@@ -63,9 +61,6 @@ data_files.append(('share/thinfilter/config/logrotate.d/', ['logrotate.d/squid3'
 # openvpn
 data_files.append(('share/thinfilter/config/logrotate.d/', ['logrotate.d/openvpn'] ))
 
-## dansguardian
-##for f in get_recursive("dansguardian/", '/var/lib/thinfilter/changes/etc/dansguardian/'):
-3#    data_files.append(f)
 
 
 # firewall

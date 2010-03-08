@@ -34,15 +34,22 @@ uid=None
 devel=False
 demo=False
 ssl=False
-sessiontimeout=300 #seconds (5 minutes)
+#seconds (10 minutes)
+sessiontimeout=600
 
 DAEMON_LOG_FILE = "/var/log/thinfilter.log"
 DAEMON_PID_FILE = "/var/run/thinfilter.pid"
 DBNAME = "/var/lib/thinfilter/database.db"
 BASE="/usr/share/thinfilter/webpanel/"
 VAR="/var/lib/thinfilter/"
-SESSIONS_DIR=VAR+"sessions"
 
+SESSIONS_DIR=VAR+"sessions"
+SQUIDGUARD_PATH=VAR+"/squidGuard/db/"
+SQUIDGUARD_CONF="/etc/squid3/squidGuard.conf"
+SQUIDGUARD_FILES=['domains', 'urls', 'expressions']
+SQUIDGUARD_EDIT_RULES=['lista-blanca', 'lista-negra']
+
+OPENVPN_DIR="/etc/openvpn"
 
 # set BASE in git sources dir to debug
 if os.path.isfile('debian/thinfilter.install'):
@@ -51,12 +58,18 @@ if os.path.isfile('debian/thinfilter.install'):
     DAEMON_PID_FILE = os.path.abspath('./') + "/thinfilter.pid"
     DBNAME = os.path.abspath('./') + "/thinfilter.db"
     SESSIONS_DIR=os.path.abspath('./') + "/webpanel/sessions"
+    #SQUIDGUARD_PATH=os.path.abspath('./') +"/squidGuard/db/"
+    #SQUIDGUARD_CONF=os.path.abspath('./') + "/squid3/squidGuard.conf.demo"
 
 
 IMAGE_EXTENSIONS=['png', 'jpg', 'jpeg', 'gif', 'bmp', 'ppm', 'pcx', 'tiff']
 ALLOWED_CHARS=string.letters + string.digits + '-_.'
 HIDDEN_INTERFACES=['lo', 'wmaster0', 'pan0', 'vboxnet0']
+
 SERVER_PORT=16895
+WEB_PORT=9090
+WEB_IP="10.0.0.1"
+FORCE_IP=""
 
 stop = False
 

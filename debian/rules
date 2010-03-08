@@ -12,7 +12,7 @@ include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/python-distutils.mk
 
 #DEB_DH_INSTALL_ARGS=--list-missing
-
+DEB_DH_INSTALLINIT_ARGS=--error-handler=true
 
 DEB_DESTDIR=$(CURDIR)/debian/tmp
 
@@ -27,3 +27,5 @@ binary-predeb/thinfilter::
 	rm debian/thinfilter/usr/share/thinfilter/webpanel/static/jquery.js
 	dh_link usr/share/thinfilter/webpanel/static/jquery-1.3.2.min.js usr/share/thinfilter/webpanel/static/jquery.js
 
+	# remove db files
+	find debian/thinfilter/var/lib/thinfilter/squidGuard/db -name "*.db" | xargs rm -f

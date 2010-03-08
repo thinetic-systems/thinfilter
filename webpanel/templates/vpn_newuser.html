@@ -1,0 +1,40 @@
+$def with (data)
+
+
+<h1 class="clear"><img src="/data/users.png" alt="Usuarios"> Nuevo usuario</h1>
+
+$if data.has_key('error'):
+    <div class="error">$(data['error'])</div>
+
+<form method="post" action="/vpn/users/add">
+<table id="settings">
+    <tr>
+        <td>Nombre usuario *</td>
+        <td><input type="text" name="username" id="username" value="" size='50'></td>
+    </tr>
+    <tr>
+        <td>Contraseña * (la contraseña no se puede recuperar)</td>
+        <td><input type="password" name="password" id="password" value="" size='50'></td>
+    </tr>
+    <tr>
+        <td>Contraseña * (otra vez)</td>
+        <td><input type="password" name="password2" id="password2" value="" size='50'></td>
+    </tr>
+    <tr>
+        <td>Correo electrónico *</td>
+        <td><input type="text" name="email" id="email" value="" size='50'></td>
+    </tr>
+    
+    
+    <tr><td colspan="2"><hr></td></tr>
+
+
+<tr>
+  <td> * todos los campos son obligatorios</td>
+  <td>
+    <input type="submit" id="save" value="Guardar">
+  </td>
+</tr>
+</table>
+</form>
+

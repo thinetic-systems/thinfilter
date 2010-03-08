@@ -52,7 +52,7 @@ $def with (data, action='Guardar')
         float: left;
         width: 480px;
         position: fixed;
-        top: 20%;
+        top: 10%;
         left: 50%;
         margin: 0 0 0 -250px;
         z-index: 100;
@@ -107,14 +107,15 @@ document.getElementById('hideshow').style.visibility = 'hidden';
         $# poner con : para imprimir html
         <div id='info''>$:data.info</div>
     </div>
-        
+
     <hr noshade size="1px">
     <div ID="windowed">
         <p><a href="javascript:showForm();">Estoy autorizado</a></p>
         <p>Informaci&oacute;n extra:</p>
         <ul>
             <li><b>Intentando conectar a: <a href="$data.url">$data.url</a></b></li>
-            <li><b>Navegador: <spam id='browser'></spam></b></li>
+            <li><b>Regla: $data.targetclass</b></li>
+            $#<li><b>Navegador: <spam id='browser'></spam></b></li>
         </ul>
     </div>
     

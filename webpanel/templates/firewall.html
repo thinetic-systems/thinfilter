@@ -21,6 +21,18 @@ function delete_selected(elem){
     }
 }
 
+function change_onlyweb() {
+    var onlyweb=$$("#ONLY_WEB")[0].checked;
+    $$('.extra').each(function(i) {
+        if (onlyweb) {
+            $$('.extra')[i].style.display = '';
+        }
+        else {
+            $$('.extra')[i].style.display = 'none';
+        }
+    } );
+}
+
 function dosubmit(){
     $$('#NOPROXY_PORTS')[0].value='';
     $$('.noproxyport').each(function(i) {
@@ -70,6 +82,7 @@ $$(document).ready(function() {
             }
         } );
     }
+    change_onlyweb();
  });
 </script>
 <h1 class="clear">Configuración del cortafuegos</h1>
@@ -84,11 +97,6 @@ $$(document).ready(function() {
             <input type="checkbox" name="VPN_ENABLE" id="VPN_ENABLE" value="1" $(data['form']['VPN_ENABLE'])>
         </td>
     </tr>
-    
-    <tr>
-        <td>Navegación sólo web <br/><small>En este modo se bloquea todo el tráfico excepto HTTP</small></td>
-        <td><input type="checkbox" name="ONLY_WEB" id="ONLY_WEB" value="1" $(data['form']['ONLY_WEB'])></td>
-    </tr>
 
     <tr>
         <td>Permitir ping (ICMP)</td>
@@ -100,9 +108,13 @@ $$(document).ready(function() {
         <td><input type="checkbox" name="NTP_ENABLE" id="NTP_ENABLE" value="1" $(data['form']['NTP_ENABLE'])></td>
     </tr>
 
-
-    <tr><td colspan="2"><hr></td></tr>
     <tr>
+        <td>Navegación sólo web <br/><small>En este modo se bloquea todo el tráfico excepto HTTP</small></td>
+        <td><input type="checkbox" name="ONLY_WEB" id="ONLY_WEB" value="1" onchange='javascript:change_onlyweb();' $(data['form']['ONLY_WEB'])></td>
+    </tr>
+
+    <tr class='extra'><td colspan="2"><hr></td></tr>
+    <tr class='extra'>
         <td>Excepciones de equipos</td>
         <td>
         <select name="exceptions" id="exceptions" size='6'>
@@ -112,7 +124,7 @@ $$(document).ready(function() {
         <input type="hidden" id="NOPROXY" name="NOPROXY" value="$(data['NOPROXY'])">
         </td>
     </tr>
-    <tr>
+    <tr class='extra'>
         <td>Excepciones de puertos</td>
         <td>
         <input type="hidden" id="NOPROXY_PORTS" name="NOPROXY_PORTS" value="$(data['NOPROXY_PORTS'])">
@@ -122,13 +134,13 @@ $$(document).ready(function() {
             <br/>
         </td>
     </tr>
-    <tr><td colspan="2"><hr></td></tr>
+    <tr class='extra'><td colspan="2"><hr></td></tr>
 
 
 
 
 
-    <tr>
+    <tr class='extra'>
         <td>Puertos abiertos para todos</td>
         <td>
         <input type="hidden" id="ALL_OPEN_PORTS" name="ALL_OPEN_PORTS" value="$(data['ALL_OPEN_PORTS'])">

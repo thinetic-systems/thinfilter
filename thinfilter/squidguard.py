@@ -24,8 +24,10 @@
 
 # squidGuard rules
 
+import os
 import sys
 import time
+import datetime
 import traceback
 
 sys.path.append("./")
@@ -35,19 +37,33 @@ import thinfilter.common
 import thinfilter.db
 import thinfilter.logger as lg
 
-SQUIDGUARD_CONF="/etc/squid3/squidGuard.conf"
-SQUIDGUARD_PATH="/usr/share/squidGuard/db/"
 
 def reloadSquid():
     if thinfilter.config.demo:
+        lg.debug("reloadSquid() demo mode, doing nothing", __name__)
         time.sleep(2)
         return
-    thinfilter.common.run("squidGuard -c %s -C all"%SQUIDGUARD_CONF, verbose=True, _from=__name__)
-    thinfilter.common.run("squidGuard -c %s -u"%SQUIDGUARD_CONF, verbose=True, _from=__name__)
-    thinfilter.common.run("chown -R proxy:proxy %s"%SQUIDGUARD_PATH, verbose=True, _from=__name__)
+    
+    # delete all editable files
+    sq=squidGuard()
+    sq.resetAllTables()
+    
+    # regenerate lista-negra lista-blanca and servidor/domains files
+    for row in sq.all:
+        row.toFile()
+    
+    #save IP in squidGuard.conf
+    #FIXME
+    
+    thinfilter.common.run("squidGuard -c %s -C all"%thinfilter.config.SQUIDGUARD_CONF, verbose=True, _from=__name__)
+    #thinfilter.common.run("squidGuard -c %s -u"%thinfilter.config.SQUIDGUARD_CONF, verbose=True, _from=__name__)
+    thinfilter.common.run("chown -R proxy:proxy %s"%thinfilter.config.SQUIDGUARD_PATH, verbose=True, _from=__name__)
     thinfilter.common.run("chown -R proxy:proxy /var/log/squid3/*", verbose=True, _from=__name__)
     thinfilter.common.run("squid3 -k reconfigure || /etc/init.d/squid3 restart", verbose=True, _from=__name__)
-        
+
+
+
+
 class DB2files(object):
     def __init__(self):
         pass
@@ -82,6 +98,30 @@ class String(str):
             return TRANSLATE_STR[self]
         else:
             return self
+
+
+class Expire(str):
+    def __init__(self, txt):
+        self.printable=self.__printable__()
+        self.expired=self.__expired__()
+        self=txt
+        
+    def __printable__(self):
+        #print "expire => human %s"%self
+        if self != '':
+            diff=int(self)-int(time.time())
+            a=datetime.timedelta(seconds=diff)
+            if a.days > 0:
+                return "%s días, %s" %(a.days ,datetime.timedelta(seconds=a.seconds))
+            return a
+    
+    def __expired__(self):
+        if self == '':
+            return False
+        diff=int(self)-int(time.time())
+        if diff < 0:
+            return True
+        return False
 
 ###############################################################################
 
@@ -152,8 +192,8 @@ class Row(thinfilter.common.Base):
         return 'Row ' + dict.__repr__(self)
     
     def __init__(self, idfilter=None, filtertype='url', mode='lista-negra', 
-                 text='', description='', category='', creator='', 
-                 catdescription='', cattext=''):
+                 text='', description='', category='1', creator='', 
+                 catdescription='', cattext='', expire=''):
         self.id=idfilter
         self.filtertype=String(filtertype)
         self.mode=String(mode)
@@ -163,11 +203,24 @@ class Row(thinfilter.common.Base):
         self.creator=creator
         self.catdescription=catdescription
         self.cattext=cattext
-    
-    def _delete(self):
-        pass
+        self.expire=Expire(expire)
 
-    def save(self, formdata):
+
+    def delete(self, restart=False):
+        sql="DELETE FROM filter WHERE id='%s'"%self.id
+        lg.debug("Row:delete() sql='%s'"%sql, __name__)
+        try:
+            result=thinfilter.db.query(sql)
+            lg.debug("Row:new() result=%s"%result)
+        except:
+            return False
+        
+        # call to reload squid
+        if restart:
+            reloadSquid()
+        return True
+
+    def save(self, formdata, restart=True):
         try:
             self._save(formdata)
         except Exception, err:
@@ -177,20 +230,58 @@ class Row(thinfilter.common.Base):
         
         # save in database
         lg.error("Row::save() FIXME save in sqlite", __name__)
-        sql="UPDATE filter set text='%s', filtertype='%s', mode='%s' WHERE id='%s'"%(self.text, self.filtertype, self.mode, self.id)
-        lg.debug(sql, __name__)
+        sql="UPDATE filter set text='%s', type='%s', mode='%s', category='%s' WHERE id='%s'"%(self.text, self.filtertype, self.mode, self.category, self.id)
+        lg.debug("Row:save() sql='%s'"%sql, __name__)
+        result=thinfilter.db.query(sql)
+        lg.debug("Row:save() result=%s"%result)
         
-        # generate files DB => squidGuard/db/*****
-        lg.error("Row::save() FIXME save in files", __name__)
-        a=DB2files()
-        a.save(self.mode)
-        
-        
-        # call to reload squid
-        lg.error("Row::save() FIXME reload squid", __name__)
-        reloadSquid()
+        if restart:
+            # call to reload squid
+            lg.debug("Row::save() reload squid", __name__)
+            reloadSquid()
         
         return "ok"
+
+    def new(self, formdata, restart=False):
+        """
+        <Storage {'domain': u'de.ejemplo', 
+                  'url': u'http://url.de.ejemplo/index.html', 
+                  'unblock': u'domain', 
+                  'timeout': u'1800', 
+                  'rulename': u'porn', 
+                  'subdomain': u'url.de.ejemplo', 
+                  'expression': u''}>
+        
+        # type =>        urls|domains|expressions
+        # mode =>        lista-blanca|lista-negra
+        # text =>        the filter
+        # description => additional description of filter
+        # category =>    id of catfilter, default 1
+        """
+        if formdata.has_key('unblock'):
+            self.filtertype=formdata.unblock
+            if formdata.has_key(formdata.unblock):
+                self.text=formdata[formdata.unblock]
+            if self.filtertype in ['domain','subdomain']:
+                self.filtertype='domain'
+        # calculate expire
+        try:
+            if formdata.has_key('timeout'):
+                self.expire=int(formdata.timeout)+int(time.time())
+        except:
+            self.expire=""
+        sql="INSERT INTO filter (type,mode,text,category,expire) VALUES ('%s','%s','%s','%s','%s')"%(self.filtertype, self.mode, self.text, self.category, self.expire)
+        lg.debug("Row:new() sql='%s'"%sql, __name__)
+        try:
+            result=thinfilter.db.query(sql)
+            lg.debug("Row:new() result=%s"%result)
+        except:
+            return False
+        
+        # call to reload squid
+        if restart:
+            reloadSquid()
+        return True
 
     def _save(self, formdata):
         for key in self.keys():
@@ -200,9 +291,15 @@ class Row(thinfilter.common.Base):
                 lg.debug("   SAVE [%s] %s => %s"%(key, self[key], formdata[key]), __name__)
                 self[key]=formdata[key]
     
-    def toFile(self):
-        fname="%s%s/%s"%(SQUIDGUARD_PATH, self.mode, self.filtertype)
-        lg.debug(" 2FILE %s => %s"%(fname, self.text), __name__)
+    def toFile(self, restart=False):
+        fname="%s%s/%s"%(thinfilter.config.SQUIDGUARD_PATH, self.mode, self.filtertype)
+        lg.debug("%s => %s"%(self.text, fname), __name__)
+        f=open(fname, 'a')
+        f.write("%s\n"%self.text)
+        f.close()
+        
+        if restart:
+            reloadSquid()
 
 ###############################################################################
 class Table(list):
@@ -219,9 +316,13 @@ class Table(list):
     
     def _load(self, _filter):
         """
+        def __init__(self, idfilter=None, filtertype='url', mode='lista-negra', 
+             text='', description='', category='', creator='', 
+             catdescription='', cattext='', expire=''):
+        
         SELECT * from filter INNER JOIN catfilter ON filter.category=catfilter.id;
-        id|type|mode|text|description|category|creator|id|description|text|creator
-         0  1    2    3        4         5       6      7    8          9    10
+        id|type|mode|text|description|category|expire|creator|id|description|text|creator
+         0  1    2    3        4         5       6      7    8          9    10     11
         """
         sql="SELECT * from filter INNER JOIN catfilter ON filter.category=catfilter.id %s"%(_filter)
         #sql="SELECT id,type,mode,text,description,category FROM filter %s"%(_filter)
@@ -229,7 +330,10 @@ class Table(list):
         data=thinfilter.db.query(sql)
         if len(data) > 0:
             for line in data:
-                self.append( Row(line[0], line[1], line[2], line[3], line[4], line[5], line[6], line[8], line[9]) )
+                self.append( Row(idfilter=line[0], filtertype=line[1], mode=line[2], 
+                                 text=line[3], description=line[4], category=line[5], 
+                                 expire=line[6], creator=line[8], catdescription=line[9], 
+                                 cattext=line[10]) )
     
     def add(self, line):
         if len(line) == 4:
@@ -316,6 +420,70 @@ class squidGuard(thinfilter.common.Base):
                 
         return found
 
+    def getProxyUID(self):
+        import pwd
+        for user in pwd.getpwall():
+            if "proxy" in user:
+                return user[2]
+        # never here
+        return 0
+
+    def getProxyGID(self):
+        import pwd
+        for user in pwd.getpwall():
+            if "proxy" in user:
+                return user[3]
+        # never here
+        return 0
+
+    def __resetFile(self, fname):
+        """
+        Remove file (and *.db)
+        Create and change owner
+        """
+        #lg.debug("squidGuard::__resetFile => %s"%fname, __name__)
+        if os.path.exists(fname):
+            os.unlink(fname)
+        if os.path.exists(fname + ".db"):
+            os.unlink(fname + ".db")
+        # create empty
+        open(fname, 'w').close()
+        # change owner
+        os.chown(fname, self.getProxyUID(), self.getProxyGID())
+
+    def resetAllTables(self):
+        """
+        Clean lista-negra lista-blanca rules
+        """
+        for rule in thinfilter.config.SQUIDGUARD_EDIT_RULES:
+            for sfile in thinfilter.config.SQUIDGUARD_FILES:
+                fname="%s/%s/%s"%(thinfilter.config.SQUIDGUARD_PATH, rule, sfile)
+                try:
+                    self.__resetFile(fname)
+                except Exception, err:
+                    lg.error("Exception cleaning file %s, error=%s"%(fname, err))
+        # set WEB_IP in server
+        try:
+            fname="%s/servidor/domains"%(thinfilter.config.SQUIDGUARD_PATH)
+            f=open(fname, 'w')
+            f.write("%s\n"%thinfilter.config.WEB_IP)
+            f.close()
+        except Exception,err:
+            lg.debug("resetAllTables() set server IP as allowed, error %s"%err, __name__)
+
+
+    def saveAndReload(self):
+        # delete all editable files
+        self.resetAllTables()
+        
+        # regenerate lista-negra lista-blanca and servidor/domains files
+        for row in self.all:
+            row.toFile()
+        
+        #save IP in squidGuard.conf
+        #FIXME
+        
+        reloadSquid()
 
 if __name__=='__main__':
     pass

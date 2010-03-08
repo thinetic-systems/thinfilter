@@ -108,38 +108,54 @@ def create_db():
                                  mode TEXT, 
                                  text TEXT, 
                                  description TEXT,
-                                 category INT,
+                                 category INT DEFAULT 1,
+                                 expire TEXT,
                                  creator TEXT) """)
-    # type urls|domains|expressions
-    # mode lista-blanca|lista-negra
-    # text the filter
-    # description additional description of filter
-    # category
+    # type =>        urls|domains|expressions
+    # mode =>        lista-blanca|lista-negra
+    # text =>        the filter
+    # description => additional description of filter
+    # category =>    id of catfilter, default 1
     #
-    query("INSERT INTO filter VALUES (1, 'domains', 'lista-negra', 'tuenti.es', '', 2, 'thinfilter')")
-    query("INSERT INTO filter VALUES (2, 'expressions', 'lista-negra', '(sex)', '', 3, 'thinfilter')")
+    query("INSERT INTO filter VALUES (1, 'domains', 'lista-negra', 'tuenti.com', '', 2, '', 'thinfilter')")
+    query("INSERT INTO filter VALUES (2, 'expressions', 'lista-negra', '(sex)', '', 3, '', 'thinfilter')")
+    query("INSERT INTO filter VALUES (3, 'expressions', 'lista-negra', '(webmessenger)', '', 4, '', 'thinfilter')")
+    query("INSERT INTO filter VALUES (4, 'expressions', 'lista-negra', '(megaupload|rapidshare)', '', 5, '', 'thinfilter')")
+    query("INSERT INTO filter VALUES (5, 'expressions', 'lista-negra', 'tube', '', 6, '', 'thinfilter')")
+    query("INSERT INTO filter VALUES (6, 'domains', 'lista-blanca', 'youtube.com', '', 1, '', 'thinfilter')")
     
-    
+    ##############################################
     query("""CREATE TABLE catfilter (id INTEGER PRIMARY KEY AUTOINCREMENT,
                                      description TEXT,
                                      text TEXT,
                                      creator TEXT) """)
-    query("INSERT INTO catfilter VALUES (1, 'default', 'Estás en un ordenador de un Centro Educativo.\n<br/>La página que pretendes ver ha sido considerada por el Colegio como no adecuada de visitar en horario lectivo.\n<br/>Si deseas información de porqué ha sido así, pídesela a tu profesor.', 'thinfilter')""")
-    query("INSERT INTO catfilter VALUES (2, 'redes sociales', 'Cuando te conectes a Internet siempre has de tener claro cuando hacerlo para el estudio o el trabajo, y cuando para el ocio personal.\n<br/><br/>La página que pretendes ver es para el ocio personal, y no es momento de hacerlo cuando estés en clase.\n<br/><br/>No olvides que en las Redes Sociales hay que ser prudente con a quién otorgas la categoría de «amigo» y muy cuidadoso con la cantidad y el tipo de fotos que cuelgues: siempre dicen mucho de ti', 'thinfilter')""")
-    query("INSERT INTO catfilter VALUES (3, 'contenido adulto', 'La página que se pretende visualizar no es aconsejable verla sin supervisión de un adulto.\n<br/>Ten en cuenta que estos contenidos está realizados por actores y actrices profesionales...\n<br/>Si has entrado para «aprender algo», mejor que lo hables con un adulto de confianza que te enseñará mejor cualquier tema relacionado con la vida sexual.', 'thinfilter')""")
+    #
+    # default categories
+    query("INSERT INTO catfilter VALUES (1, 'default', 'Estás en un ordenador de un centro educativo.<br/><br/>La página que pretendes ver ha sido considerada por el colegio como no adecuada de visitar en horario lectivo.<br/><br/>Si deseas información de porqué ha sido así, pídesela a tu profesor.', 'thinfilter')""")
+    query("INSERT INTO catfilter VALUES (2, 'redes sociales', 'Cuando te conectes a Internet siempre has de tener claro cuando hacerlo para el estudio o el trabajo, y cuando para el ocio personal.<br/><br/>La página que pretendes ver es para el ocio personal, y no es momento de hacerlo cuando estés en clase.<br/><br/>No olvides que en las redes sociales hay que ser prudente con a quién otorgas la categoría de «amigo» y muy cuidadoso con la cantidad y el tipo de fotos que cuelgues: siempre dicen mucho de ti', 'thinfilter')""")
+    query("INSERT INTO catfilter VALUES (3, 'contenido adulto', 'La página que se pretende visualizar no es aconsejable verla sin supervisión de un adulto.<br/><br/>Ten en cuenta que estos contenidos está realizados por actores y actrices profesionales...<br/><br/>Si has entrado para «aprender algo», mejor que lo hables con un adulto de confianza que te enseñará mejor cualquier tema relacionado con la vida sexual.', 'thinfilter')""")
+    query("INSERT INTO catfilter VALUES (4, 'chat y msn', 'Cuando te conectes a Internet siempre has de tener claro cuando hacerlo para el estudio o el trabajo, y cuando para el ocio personal.<br/><br/>La página que pretendes ver es para el ocio personal, y no es momento de hacerlo cuando estés en clase.<br/><br/>Ten presente en los Chat y en el Messenger, que tu intimidad es lo primero: prudencia en dar tu nombre, dirección, teléfonos o en quedar con conocidos a través de Internet. Recuerda que un mensaje en pantalla no tiene cara.', 'thinfilter')""")
+    query("INSERT INTO catfilter VALUES (5, 'descargas', 'Hacer descargas de propiedad intelectual es un delito.<br/><br/>Es como robar en el mundo real.<br/><br/>No creas que en Internet existe el anonimato: toda navegación siempre deja huella y seguir su rastro es muy sencillo y preciso.<br/><br/>No enseñes este tipo de web a tus compañeros, por favor sed legales siempre...', 'thinfilter')""")
+    query("INSERT INTO catfilter VALUES (6, 'videos', 'Cuando te conectes a Internet siempre has de tener claro cuando hacerlo para el estudio o el trabajo, y cuando para el ocio personal.<br/><br/>La página que pretendes ver es para el ocio personal, y no es momento de hacerlo cuando estés en clase.<br/><br/>Si eres de los que además de verlos también disfruta creando y colgando videos, recuerda que tanto grabar como fotografiar a la gente sin permiso como colgar videos o montajes de fotos en la web sin su consentimiento es un acto ilegal y por tanto con responsabilidades penales.', 'thinfilter')""")
+    
     
     ##############################################
-    query("""CREATE TABLE config (varname TEXT, 
+    query("""CREATE TABLE config (varname TEXT PRIMARY KEY, 
                                   value TEXT) """)
+    #
+    #
+    query("INSERT INTO config VALUES ('firsttime', '1')")
     
-    query("""CREATE TABLE auth (username TEXT, 
+    
+    ##############################################
+    query("""CREATE TABLE auth (username TEXT PRIMARY KEY, 
                                 password TEXT,
                                 roles TEXT) """)
     #
     #
     # insert default data
     query("INSERT into auth (username, password, roles) VALUES ('admin', '%s', 'admin')" %(thinfilter.common.PasswordHash(password_='admin').get()) )
-    query("INSERT into auth (username, password, roles) VALUES ('demo', '%s', 'livestats.livestats')"%(thinfilter.common.PasswordHash(password_='admin').get()) )
+    query("INSERT into auth (username, password, roles) VALUES ('demo', '%s', 'livestats.livestats')"%(thinfilter.common.PasswordHash(password_='demo').get()) )
     return
 
 
@@ -158,11 +174,18 @@ def load_users():
         thinfilter.config.users[_auth[0]]=thinfilter.common.PasswordHash(hash_=_auth[1])
     lg.debug("load_users() loaded %s users"%( len(thinfilter.config.users) ), __name__)
 
+def clean_db():
+    try:
+        query("DELETE FROM filter WHERE text='undefined' OR type='undefined'")
+    except:
+        pass
+
 def start():
     if not os.path.isfile(thinfilter.config.DBNAME):
         # create database
         create_db()
     load_users()
+    clean_db()
 
 
 

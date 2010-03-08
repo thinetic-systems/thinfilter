@@ -2,25 +2,30 @@ $def with (data, action='Guardar')
 
 
 
-<h1 class="clear">Configuración de usuarios</h1>
+<h1 class="clear"><img src="/data/users.png" alt="Usuarios">Configuración de usuarios</h1>
 
 
-<form method="post" action="/vpn">
-<table id="settings" border="1">
+<table id="settings">
 $for v in data:
     <tr>
-        <td rowspan="$(len(data[v])+1)">Usuario: <b>$v</b></td>
+        <td rowspan="$(len(data[v])+1)">Usuario: <b>$v</b>
+        <br/>
+        <a href="/vpn/users/download?username=$v" title='Descargar'><img src="/data/zip.png" alt="Descargar"></a>
+        </td>
+        
     </tr>
     $for w in data[v]:
         <tr>
-        <td>$w</td>
-    </tr>
-    
+            <td>$w</td>
+        </tr>
     
     <tr><td colspan="3"><hr></td></tr>
 
 
-<tr><td>&nbsp;</td><td><input type="submit" id="$action" value="$action"></td></tr>
 </table>
-</form>
+
+
+<div class="right">
+        <a href="/vpn/users/add">Nuevo usuario</a>
+</div>
 

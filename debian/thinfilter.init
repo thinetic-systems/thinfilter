@@ -35,15 +35,20 @@ do_start()
 {
     [ ! -d /var/run ] && mkdir -p /var/run
 
-    # start thinfilter daemon 
-    # (use daemonize and double fork, not need start-stop-daemon)
-    $DAEMON --start >/dev/null 2>&1
+    # start iptables
+    /usr/sbin/thinfilter.fw
+
+    # start thinfilter daemon
+    start-stop-daemon --start --background --quiet --pidfile /var/run/$NAME.pid --exec $DAEMON -- --start
+    #start-stop-daemon $DAEMON --start >/dev/null 2>&1
 }
 
 
 do_stop()
 {
     $DAEMON --stop >/dev/null 2>&1 || true
+    #FIXME clean iptables rules???
+    #/usr/sbin/thinfilter.fw off
 }
 
 

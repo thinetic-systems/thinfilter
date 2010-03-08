@@ -46,6 +46,7 @@ thinfilter [options] action
         --demo      (don't exec actions)
         --daemon    (fork on background)
         --enablessl (enable HTTPS SSL)
+        --forceip=xx.xx.xx.xx (force internal IP)
         
     Actions:
         --start  (start daemon)
@@ -57,7 +58,7 @@ thinfilter [options] action
 """
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "debug", "devel", "demo", "daemon", "start", "stop", "status", "enablessl"])
+    opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "debug", "devel", "demo", "daemon", "start", "stop", "status", "enablessl", "forceip="])
 except getopt.GetoptError, err:
     print >> sys.stderr , "thinfilter ERROR: %s"%(str(err))
     usage()
@@ -85,6 +86,8 @@ for o, a in opts:
         
     elif o == "--enablessl":
         thinfilter.config.ssl=True
+    elif "forceip" in o:
+        thinfilter.config.FORCE_IP=a
     
     elif o == "--start":
         start=True
@@ -103,37 +106,15 @@ if not start and not stop and not status:
 
 
 ################################################################################
-
+import web
 if start:
-    import web
     web.config.debug = False
     if thinfilter.config.debug:
         web.config.debug=True
         thinfilter.config.daemon=True
 
-    import thinfilter.logger as lg
-#    lg.info("init")
+import thinfilter.logger as lg
 
-#    if thinfilter.config.debug == False:
-#        print "==> logger"
-#        sys.stderr = lg.stderr
-#        print "stderr redirected"
-#        sys.stdout = lg.stdout
-#        print "stdout redirected"
-#        print "  <=== logger"
-#    lg.info("post-init")
-
-#    lg.old_stderr=sys.stderr
-#    lg.old_stdout=sys.stdout
-#    print "sys"
-
-#    print "logger"
-
-#    if thinfilter.config.daemon:
-#        lg.old_stderr=sys.stderr
-#        lg.old_stdout=sys.stdout
-#        sys.stderr = lg.stderr()
-#        sys.stdout = lg.stdout()
 
 # load daemonize
 import thinfilter.daemonize
@@ -208,15 +189,18 @@ class ShelfStore(web.session.ShelfStore):
 
 store = ShelfStore(shelve.open(thinfilter.config.SESSIONS_DIR + '/sessions.shelf'))
 ################################################################################
-
+#
+# Overwrite runsimple() function
+#    * disable /static
+#    * log to logger
+#
 import web.httpserver
 
-def runsimple(func, server_address=("0.0.0.0", 9090)):
+def runsimple(func, server_address=("0.0.0.0", thinfilter.config.WEB_PORT)):
     func = lg.LogThinFilter(func)
     from web.wsgiserver import CherryPyWSGIServer
     server=CherryPyWSGIServer(server_address, func, server_name="localhost")
-
-    #print "http://%s:%d/" % server_address
+    
     lg.info("\n\n\t\tserver started: http://%s:%d/\n"%server_address)
     try:
         server.start()
@@ -229,18 +213,40 @@ web.httpserver.runsimple=runsimple
 
 
 if start:
+    # config server IP
+    if thinfilter.config.FORCE_IP != "":
+        thinfilter.config.WEB_IP=thinfilter.config.FORCE_IP
+    else:
+        import thinfilter.common
+        ifaces=thinfilter.common.Interfaces().get()
+        #from pprint import pprint
+        #pprint(ifaces)
+        for net in ifaces:
+            if net['gateway'] is None and "eth" in net['iface']:
+                #print "net=%s"%net
+                thinfilter.config.WEB_IP=net['addr']
+                lg.debug("server IP ===> %s"%(thinfilter.config.WEB_IP))
+                break
+    
     # init database
     import thinfilter.db
     thinfilter.db.start()
     
+    # start firts time install scripts if needed
+    try:
+        firsttime=thinfilter.db.query("SELECT value FROM config where varname='firsttime'")
+        thinfilter.common.FirstRun(firsttime[0][0])
+    except:
+        pass
+    #sys.exit(0)
     
     lg.debug("Loading modules", __name__)
     import thinfilter.modules
     thinfilter.common.register_role_desc('admin', "Administrador")
     thinfilter.common.init_modules(thinfilter.modules)
     lg.debug("Modules loaded, here we go....", __name__)
-
-
+    
+    
     # global app
     app = web.application(thinfilter.common.geturls(), globals())
     render = web.template.render(thinfilter.config.BASE + 'templates/')
@@ -264,18 +270,19 @@ if __name__ == "__main__":
     
     lg.info("main() sys.argv=%s args=%s debug=%s daemon=%s" %(sys.argv,args, thinfilter.config.debug, thinfilter.config.daemon) ,__name__)
     if start:
-        sys.argv=[sys.argv[0], '9090']
+        sys.argv=[sys.argv[0], str(thinfilter.config.WEB_PORT)]
         
         # change procname
         try:
-            thinfilter.daemonize.set_proc_name('thinfilter')
-            sys.argv=['thinfilter', '9090']
+            thinfilter.daemonize.set_proc_name('thinfilter.daemon')
+            sys.argv=['thinfilter', str(thinfilter.config.WEB_PORT)]
         except Exception, err:
             print "Exception changing name of process, error=%s"%err
 
         if thinfilter.config.daemon:
             lg.debug("daemonize....", __name__)
             #thinfilter.daemonize.start_server()
+        
         app.run()
         lg.info("main() closing...", __name__)
         
@@ -287,7 +294,7 @@ if __name__ == "__main__":
     
     elif stop:
         store.shelf=None
-        thinfilter.daemonize.stop_server('thinfilter')
+        thinfilter.daemonize.stop_server('thinfilter.daemon')
     
     elif status:
         store.shelf=None

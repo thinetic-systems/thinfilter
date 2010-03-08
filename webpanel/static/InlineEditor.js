@@ -174,12 +174,12 @@ function __IEGetNextPunto(){
 }
 
 function __IEGetLastClassName(fila){
-    classname=$(celdamaestra + '-'+fila).className;
-    if(classname == celdamaestra + " par"){
-        return "impar";
+    classname=$('#' + celdamaestra + '-'+fila)[0].className;
+    if(classname == celdamaestra + " odd"){
+        return "even";
     }
-    else if(classname == celdamaestra + " impar" ) {
-        return "par";
+    else if(classname == celdamaestra + " even" ) {
+        return "odd";
     }
 }
 
@@ -336,4 +336,18 @@ function IECompleteAjax(response){
         fila=0;
         accion="";
 }
+
+Array.prototype.max = function() {
+    var max = this[0];
+    var len = this.length;
+    for (var i = 1; i < len; i++) if (this[i] > max) max = this[i];
+    return max;
+}
+Array.prototype.min = function() {
+    var min = this[0];
+    var len = this.length;
+    for (var i = 1; i < len; i++) if (this[i] < min) min = this[i];
+    return min;
+}
+
 

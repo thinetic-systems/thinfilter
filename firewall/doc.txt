@@ -1,0 +1,71 @@
+iptables -F
+iptables -t nat -F
+
+for u in INPUT FORWARD OUTPUT; do iptables -A $u -m state --state
+RELATED,ESTABLISHED -j ACCEPT; done
+
+luego, creamos cadenzas (yo las uso para identificar servicios, puertos,
+programas)
+
+iptables -N PERMISOS-SSH
+iptables -N PERMISOS-PROXY
+iptables -N PERMISOS-CORREO
+iptables -N PERMISOS-DNS
+iptables -N PERMISOS-WEB
+iptables -N PERMISOS-MSN
+
+iptables -A INPUT -p tcp -m tcp --dport 22 -j PERMISOS-SSH --> Referenciamos
+el puerto 22 a la cadena PERMISOS-SSH
+iptables -A PERMISOS-SSH -s 192.168.0.0/24 -p tcp -m tcp --sport 1024:
+--dport 22 -m state --state NEW -j ACCEPT -- > Permitimos el acceso por ssh
+a toda la red
+
+iptables -A FORWARD -p tcp -m tcp --dport 1863 -j PERMISOS-MSN
+
+iptables -A INPUT -p tcp -m tcp --dport 3128 -j PERMISOS-PROXY -->
+Referenciamos el puerto 3128 a la cadena PERMISOS-PROXY
+iptables A PERMISOS-PROXY -s 192.168.0.0/24 -d ip-proxy -p tcp -m tcp
+--sport 1024: --dport 3128 -m state --state NEW -j ACCEPT --> Permitimos el
+acceso de toda la red al proxy, acá podrías ser más seguro amarrando a todos
+por mac con esto -m mac --mac-source 00:11:22:33:44:55 eso ya depende como
+quieras manejarlo
+
+iptables -N BYPASS-MSN -t nat --> Cadena en la tabla NAT para bypasear la
+salida/entrada al MSN
+iptables -N BYPASS-WEB t nat  --> Cadena en la table NAT para bypasear la
+salida/entrada al WWW 
+
+iptables -A PREROUTING -p tcp -m tcp --dport 1863 -j BYPASS-MSN -->
+Referenciamos el puerto 1863 del MSN a la cadena BYPASS-MSN
+iptables -A PREROUTING -p tcp -m tcp --dport 80 -j BYPASS-WEB -->
+Referenciamos el puerto 80 a la cadena BYPASS-WEB
+
+-- Mandamos todo el trafico 80 y 1863 al proxy al puerto 3128
+iptables -A PREROUTING -s 192.168.0.0/24 -p tcp -m tcp --sport 1024: --dport
+80 -j DNAT --to-destination ip-proxy:3128 -j ACCEPT -t nat --> aca mandamus
+todo el trafico de la red que va hacia el puerto 80 al puerto 3128 del proxy
+(squid)
+
+iptables -A PREROUTING -s 192.168.0.0/24 -p tcp -m tcp --sport 1024: --dport
+1863 -j DNAT --to-destination ip-proxy:3128 -t nat
+
+-- empezamos a habilitar el acceso al msn a las ip que queramos
+iptables -A BYPASS-MSN -s 192.168.0.3 -p tcp -m tcp --sport 1024: --dport
+1863 -m state --state NEW -j ACCEPT -t nat
+
+y en la cadena PERMISOS-MSN del Forward
+
+iptables -A PERMISOS-MSN -s 192.168.0.3 -p tcp -m tcp --sport 1024: --dport
+1863 -m state --state NEW -j ACCEPT
+
+con eso ya debes de tener solucionado el msn para lo que es el msn live, te
+faltaría las demás cadenas que cree y por ultimo
+procedes a cerrar el FW/PROXY
+
+for u in INPUT FORWARD OUTPUT; do iptables -$u -P DROP; done
+
+No sé si alguien de la lista podría mejorarlo o agregar algo mas, al menos
+para lo que necesitas esta lo demás.
+
+Saludos
+Darkmull

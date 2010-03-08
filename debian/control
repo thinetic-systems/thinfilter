@@ -7,8 +7,9 @@ Standards-Version: 3.8.1
 
 Package: thinfilter
 Architecture: all
-Depends: dnsmasq, squid3, squidguard, openvpn,
+Depends: dnsmasq, squid3, squidguard, sarg, openvpn, psmisc,
          python, python-webpy (>= 0.310-1), python-netifaces,
+         python-configobj, python-rrdtool, python-pysqlite2, zip, sqlite3,
          ${misc:Depends}, ${shlibs:Depends}, ${python:Depends}
 Description: Easy and small proxy distro based on thindistro
 

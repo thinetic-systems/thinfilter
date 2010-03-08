@@ -92,10 +92,16 @@ $for v in conf:
     <td>&nbsp;</td>
     <td>
         <input type="button" id="reset" value="Resetear" onclick="javascript:vpn_reset();">
-        <input type="button" id="restart" value="Reiniciar" onclick="javascript:vpn_restart();">
+        $if running:
+            <input type="button" id="restart" value="Reiniciar VPN" onclick="javascript:vpn_restart();">
+        $else:
+            <input type="button" id="restart" value="Reiniciar VPN" onclick="javascript:vpn_restart();" disabled>
     </td>
     <td>
-        <input type="submit" id="$action" value="$action">
+        $if running:
+            <input type="submit" id="$action" value="$action" disabled>
+        $else:
+            <input type="submit" id="$action" value="$action">
     </td>
 </tr>
 </table>
@@ -106,6 +112,7 @@ $for v in conf:
 	<div class="popup_block">
 		<div class="popup">
 			<h3>Aplicando cambios...</h3>
+			<h2>(puede tardar varios minutos)</h2>
 			<img src="/data/loading.gif">
 		</div>
 	</div>

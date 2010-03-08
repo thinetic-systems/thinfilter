@@ -16,7 +16,7 @@ $if data['form']['enabledelete'] == '1':
 $else:
     <h1 class="clear"><img src="/data/folder.png" alt="Recursos"> Nuevo recurso compartido</h1>
 
-
+$data
 $if data.has_key('error'):
     <div class="error">$(data['error'])</div>
 

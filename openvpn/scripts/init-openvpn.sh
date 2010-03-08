@@ -15,6 +15,7 @@ invoke-rc.d openvpn stop
 
 ./clean-all
 
+rm -f server.conf
 # delete crt and keys
 #rm -f *.crt *.key *.pem
 

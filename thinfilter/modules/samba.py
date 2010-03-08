@@ -51,7 +51,7 @@ import thinfilter.common
 import web
 render = web.template.render(thinfilter.config.BASE + 'templates/')
 
-SMB_RELOAD="/etc/init.d/samba reload"
+SMB_RELOAD="invoke-rc.d samba reload"
 SMB_PATH="/var/lib/samba/shares"
 SMB_MINUSER=2001
 SMB_MAXUSER=3000
@@ -77,6 +77,9 @@ SMB_VARS=[
   read only = yes
   write list = admin, root, @staff
 """
+
+
+
 
 from configobj import ConfigObj, Section
 class MyConfigObj (ConfigObj):
@@ -293,7 +296,7 @@ class Shares(thinfilter.common.Base):
 
     def save(self):
         self.varsobj.write()
-        thinfilter.common.run(SMB_RELOAD, verbose=False, _from=__name__)
+        thinfilter.common.run(SMB_RELOAD, verbose=True, _from=__name__)
 
     def change_workgroup(self, workgroup):
         lg.debug("change_workgroup() workgroup=%s"%workgroup, __name__)
@@ -329,7 +332,7 @@ class Shares(thinfilter.common.Base):
             if key in ['comment', 'path']:
                 newdata[key]=shareobj[key]
             elif key in ['browseable', 'guest ok', 'read only']:
-                if shareobj[key] == 'on':
+                if shareobj[key] == 'on' or shareobj[key] == 'yes':
                     newdata[key]='yes'
                 else:
                     newdata[key]='no'
@@ -337,7 +340,8 @@ class Shares(thinfilter.common.Base):
                 newdata['valid users'].append(key.split('|')[1])
         self.varsobj[sharename]=newdata
         self.save()
-        os.mkdir(newdata['path'])
+        if not os.path.isdir(newdata['path']):
+            os.mkdir(newdata['path'])
         return True
 
     def new_user(self, username, userobj):
@@ -545,7 +549,7 @@ class shares(object):
 
 
 def init():
-    if thinfilter.config.devel or os.path.isfile('/usr/sbin/smbd'):
+    if os.path.isfile('/usr/sbin/smbd'):
         lg.debug("samba::init()", __name__)
         thinfilter.common.register_url('/shares',                          'thinfilter.modules.samba.samba')
         thinfilter.common.register_url('/shares/([a-zA-Z0-9-./]*)',  'thinfilter.modules.samba.shares')

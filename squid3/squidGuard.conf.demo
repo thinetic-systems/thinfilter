@@ -3,7 +3,7 @@
 #----------------------------------------------------------------
 
 # DIRECTORIOS DE CONFIGURACION
-dbhome /var/lib/thinfilter/squidGuard/db
+dbhome ../squidGuard/db
 logdir /var/log/squid3/
 
 # GRUPOS DE DIRECCIONES

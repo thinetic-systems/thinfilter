@@ -55,6 +55,37 @@ $for line in categories:
         category[$loop.index0]['texto']="$line.description";
         category[$loop.index0]['valor']="$line.id";
 IEAddEditable ("category", "select", category);
+
+function nueva(){
+    var newidfila=__IEGetNextPunto();
+    var classname=__IEGetLastClassName(newidfila-1);
+    
+    newfile=document.createElement("tr");
+    newfile.classname='rule '+classname;
+    newfile.id='rule-'+newidfila;
+    var rows= Array('text', 'filtertype', 'mode', 'category', 'expire');
+    for (var i=0; i< rows.length; i++){
+        newrow=document.createElement("td");
+        newrow.id=rows[i] + '-'+newidfila;
+        newfile.appendChild(newrow);
+    }
+    newrow=document.createElement("td");
+    newrow.id='editar-'+newidfila;
+        /* add link */
+        newa=document.createElement("a");
+        newa.href='javascript:IEEditarFila('+newidfila+');';
+            newimg=document.createElement("img");
+            newimg.src="/data/ieedit.png";
+            newimg.alt="Editar";
+            newa.appendChild(newimg);
+        newrow.appendChild(newa);
+    newfile.appendChild(newrow);
+    
+    $$('#settings').append(newfile);
+    
+    IEEditarFila(newidfila);
+}
+
 </script>
 
 <script>
@@ -72,7 +103,7 @@ function hideHelp(){
 
 $if len(data) > 0:
     $$(document).ready(function()
-        { $$("#settings").tablesorter( {headers: {3:{sorter:false}} } ); }
+        { $$("#settings").tablesorter( {headers: {4:{sorter:false},5:{sorter:false}} } ); }
     );
 </script>
 
@@ -91,6 +122,7 @@ $if rulename != '':
     <th>Tipo</th>
     <th>Acción</th>
     <th>Categoría</th>
+    <th>Caduca</th>
     <th>&nbsp;</th>
 </tr>
 </thead>
@@ -102,6 +134,7 @@ $for rule in data:
         <td id="filtertype-$rule.id">$rule.filtertype.printable</td>
         <td id="mode-$rule.id">$rule.mode.printable</td>
         <td id="category-$rule.id">$rule.catinfo.description</td>
+        <td id="expire-$rule.id">$rule.expire.printable</td>
         <td id="editar-$rule.id">
             <a href="javascript:IEEditarFila($rule.id);">
                 <img src="/data/ieedit.png" alt="Editar">
@@ -111,11 +144,10 @@ $for rule in data:
     <!-- <tr id="rule-$rule.id-line"><td colspan="4"><hr></td></tr> -->
 </table>
 
-
 <div class="right">
-        <input type="hidden" id="rulename" name="rulename" value="$rulename">
-        <input type="submit" id="$action" value="$action">
+        <a href="javascript:nueva();">Nueva regla</a>
 </div>
+
 </form>
 
 

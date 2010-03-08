@@ -21,7 +21,8 @@ function hideHelp(){
 <table id="settings">
 
 $if data.done == '1':
-    <h1 class="error">Guardado</h1>
+    <h1 class="error" style="margin-bottom: 0px;">Guardado</h1>
+    <h3 class="error" style="margin-top: 0px;"><a href="/stop/admin/edit?rule=lista-blanca">Ver reglas lista blanca</a></h3>
 
 <tr>
     <td>Desbloquear URL completa</a></td>
@@ -69,11 +70,11 @@ $if data.subdomain:
     <td>Durante</a></td>
     
     <td>
-    <input type="radio" name='timeout' id="timeout" value="30m" checked="checked">30 minutos<br/>
-    <input type="radio" name='timeout' id="timeout" value="1h">1 hora<br/>
-    <input type="radio" name='timeout' id="timeout" value="2h">2 horas<br/>
-    <input type="radio" name='timeout' id="timeout" value="1d">1 día<br/>
-    <input type="radio" name='timeout' id="timeout" value="all">siempre<br/>
+    <input type="radio" name='timeout' id="timeout" value="1800" checked="checked">30 minutos<br/>
+    <input type="radio" name='timeout' id="timeout" value="3600">1 hora<br/>
+    <input type="radio" name='timeout' id="timeout" value="7200">2 horas<br/>
+    <input type="radio" name='timeout' id="timeout" value="86400">1 día<br/>
+    <input type="radio" name='timeout' id="timeout" value="">siempre<br/>
     </td>
 </tr>
 <tr><td colspan="2"><hr></td></tr>

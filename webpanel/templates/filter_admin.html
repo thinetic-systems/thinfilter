@@ -11,14 +11,24 @@ function showPopup(){
 <form method="post" action="/stop/admin" onsubmit="javascript:showPopup();">
 <table id="settings">
 
+    <tr>
+        <td>Tipo de filtro</td>
+        <td><input type="radio" name='mode' id="mode" value="allow" checked="checked"> Permisivo</td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+        <td><input type="radio" name='mode' id="mode" value="restricted"> Restrictivo <small></small></td>
+    </tr>
+
+    <tr><td colspan="2"><hr></td></tr>
 
     <tr>
         <td>Reglas Editables</td>
         <td>
+        <a href="/stop/admin/edit">todas</a><br/>
         $for u in data.editable:
             <a href="/stop/admin/edit?rule=$u">$u</a>
             <br/>
-        <a href="/stop/admin/edit">todas</a>
         </td>
     </tr>
     <tr><td colspan="2"><hr></td></tr>
@@ -28,10 +38,10 @@ function showPopup(){
         <td>
         $for u in data.rules:
             $if u in data.squidguard['blocked']:
-                $ st='checked'
+                $ st='checked="checked"'
             $else:
                 $ st=''
-            <input type="checkbox" class="noproxyport" name="$(u)" id="$(u)" value="1" $st>
+            <input type="checkbox" class="noproxyport" name="$(u)" id="$(u)" value="1" $:st>
             $u<br/>
         </td>
     </tr>

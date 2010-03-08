@@ -7,4 +7,3 @@ webpanel/sessions
 server/server*
 server.db
 squidGuard/db/*/*.db
-thinfilter/procname.so
