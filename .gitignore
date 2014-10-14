@@ -1,3 +1,4 @@
+*.pyc
 openvpn/ipp.txt
 thinfilter.log
 thinfilter.db
